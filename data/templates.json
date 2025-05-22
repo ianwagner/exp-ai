@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Trivia",
+    "description": "Generate a trivia style game with questions and answers.",
+    "formatInstruction": "Provide a list of questions each with multiple choice answers and an indication of the correct option.",
+    "suggestedUseCases": [
+      "Marketing campaign", "Product engagement" ]
+  },
+  {
+    "name": "Story Challenge",
+    "description": "Create a short story challenge that prompts users to continue a story.",
+    "formatInstruction": "Return a short intro story and ask the user to continue the tale in a creative way.",
+    "suggestedUseCases": [
+      "Social media engagement", "Educational" ]
+  },
+  {
+    "name": "This or That",
+    "description": "Offer players two choices prompting them to pick one quickly.",
+    "formatInstruction": "Generate a list of paired options.",
+    "suggestedUseCases": [
+      "Ice breakers", "Surveys" ]
+  }
+]
