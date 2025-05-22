@@ -11,5 +11,10 @@
     "react": "latest",
     "react-dom": "latest",
     "firebase": "latest"
+  },
+  "devDependencies": {
+    "tailwindcss": "latest",
+    "postcss": "latest",
+    "autoprefixer": "latest"
   }
 }
