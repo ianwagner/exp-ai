@@ -17,6 +17,12 @@ export default async function handler(req, res) {
 
   const prompt = buildPrompt(template, brandTone, useCase);
 
+  if (!process.env.OPENAI_API_KEY) {
+    return res
+      .status(500)
+      .json({ error: 'OPENAI_API_KEY environment variable is not set' });
+  }
+
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
