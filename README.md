@@ -21,5 +21,12 @@ Deploy this project on Vercel using the **Next.js** preset. When Vercel detects 
 Next.js app it automatically handles the build output, so no `public` directory
 is produced. A `vercel.json` file is unnecessary unless you need custom routing
 or overrides, because the default Next.js configuration is applied
-automatically.
+automatically. If you previously added a `vercel.json` with a custom
+`outputDirectory`, remove those overrides or replace the file with:
+
+```json
+{
+  "framework": "nextjs"
+}
+```
 
