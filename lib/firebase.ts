@@ -1,12 +1,17 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+// lib/firebase.ts
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  apiKey: "AIzaSyDBYQHhoWwLYu2N2QFBG-zTjRiYdW305RM",
+  authDomain: "mtb-ai-5fbea.firebaseapp.com",
+  projectId: "mtb-ai-5fbea",
+  storageBucket: "mtb-ai-5fbea.firebasestorage.app",
+  messagingSenderId: "990228774847",
+  appId: "1:990228774847:web:cff9217b936285d270eb0a"
 };
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-export const db = getFirestore(app);
+export { db };
