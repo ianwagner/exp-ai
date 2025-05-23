@@ -1,4 +1,4 @@
-# Toy Box Game Generator
+# My TOIbox Game Generator
 
 This is a simple Next.js application that generates game content using OpenAI ChatGPT.
 
