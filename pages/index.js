@@ -1,14 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
 import templates from '../data/templates.json';
 import GameTypeSettings from '../components/GameTypeSettings';
+import { db } from '../lib/firebase';
 
 export default function Home() {
+  const [gameTypes, setGameTypes] = useState(templates);
   const [templateName, setTemplateName] = useState(templates[0]?.name || '');
   const [brandTone, setBrandTone] = useState('');
   const [useCase, setUseCase] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchGameTypes = async () => {
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) return;
+      try {
+        const snapshot = await getDocs(collection(db, 'gameTypes'));
+        const items = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          items.push({ name: docSnap.id, ...data });
+        });
+        if (items.length) {
+          setGameTypes(items);
+          setTemplateName(items[0].name);
+        }
+      } catch (err) {
+        console.error('Failed to fetch game types', err);
+      }
+    };
+    fetchGameTypes();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,7 +71,7 @@ export default function Home() {
             onChange={(e) => setTemplateName(e.target.value)}
             className="w-full bg-[#2C2C2C] text-white p-[5px] border border-[#393939] rounded-[8px]"
           >
-            {templates.map((t) => (
+            {gameTypes.map((t) => (
               <option key={t.name} value={t.name}>{t.name}</option>
             ))}
           </select>
