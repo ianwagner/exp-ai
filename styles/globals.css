@@ -10,3 +10,46 @@ body {
   font-family: 'Space Grotesk', sans-serif;
   padding: 20px;
 }
+
+/* Form controls */
+.form-control {
+  @apply w-full bg-[#2C2C2C] text-white p-2 border border-[#393939] rounded-md;
+}
+
+.form-input-light {
+  @apply w-full p-1 text-black rounded-md;
+}
+
+/* Buttons */
+.btn {
+  @apply px-4 py-2 rounded-md font-semibold;
+}
+
+.btn-primary {
+  @apply bg-[#feb710] text-[#121212];
+}
+
+.btn-neutral {
+  @apply bg-gray-700 text-white;
+}
+
+.btn-success {
+  @apply bg-green-600 text-white;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white;
+}
+
+.btn-blue {
+  @apply bg-blue-600 text-white;
+}
+
+/* Modal dialog */
+.modal-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10;
+}
+
+.modal-content {
+  @apply bg-[#212121] p-4 rounded-md w-full max-w-lg max-h-full overflow-auto;
+}

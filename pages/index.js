@@ -69,7 +69,7 @@ export default function Home() {
           <select
             value={templateName}
             onChange={(e) => setTemplateName(e.target.value)}
-            className="w-full bg-[#2C2C2C] text-white p-[5px] border border-[#393939] rounded-[8px]"
+            className="form-control"
           >
             {gameTypes.map((t) => (
               <option key={t.name} value={t.name}>{t.name}</option>
@@ -82,7 +82,7 @@ export default function Home() {
             type="text"
             value={brandTone}
             onChange={(e) => setBrandTone(e.target.value)}
-            className="w-full bg-[#2C2C2C] text-white p-[5px] border border-[#393939] rounded-[8px]"
+            className="form-control"
           />
         </div>
         <div>
@@ -90,12 +90,12 @@ export default function Home() {
           <textarea
             value={useCase}
             onChange={(e) => setUseCase(e.target.value)}
-            className="w-full bg-[#2C2C2C] text-white p-[5px] border border-[#393939] rounded-[8px]"
+            className="form-control"
           />
         </div>
         <button
           type="submit"
-          className="bg-[#feb710] text-[#121212] px-[10px] py-[10px] rounded-[100px] block mx-auto"
+          className="btn btn-primary block mx-auto"
           disabled={loading}
         >
           {loading ? 'Generating...' : 'GENERATE'}
