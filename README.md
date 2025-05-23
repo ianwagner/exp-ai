@@ -8,6 +8,20 @@ This is a simple Next.js application that generates game content using OpenAI Ch
 2. Install dependencies with `npm install`.
 3. Run the development server using `npm run dev`.
 
+### Required Environment Variables
+
+The app expects the following variables in `.env.local`:
+
+```
+OPENAI_API_KEY
+NEXT_PUBLIC_FIREBASE_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+NEXT_PUBLIC_FIREBASE_PROJECT_ID
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+NEXT_PUBLIC_FIREBASE_APP_ID
+```
+
 ## Features
 
 - Select a game template and generate content based on brand tone and use case.
