@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { collection, doc, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
+const SETTINGS_PASSWORD = process.env.NEXT_PUBLIC_SETTINGS_PASSWORD;
+
 interface GameType {
   name: string;
   description: string;
@@ -36,7 +38,7 @@ const GameTypeSettings = () => {
 
   const requestEdit = () => {
     const pwd = window.prompt('Enter password');
-    if (pwd === 'SuperSecret123') {
+    if (pwd === SETTINGS_PASSWORD) {
       setEditMode(true);
     } else if (pwd !== null) {
       alert('Incorrect password');
