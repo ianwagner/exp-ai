@@ -1,7 +1,7 @@
 import templates from '../../data/templates.json';
 import buildPrompt from '../../utils/buildPrompt';
 import { initFirebase, getDb } from '../../utils/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -9,10 +9,31 @@ export default async function handler(req, res) {
   }
 
   const { templateName, brandTone, useCase } = req.body;
-  const template = templates.find(t => t.name === templateName);
+  let template = templates.find(t => t.name === templateName);
 
   if (!template) {
-    return res.status(400).json({ error: 'Invalid template' });
+    // try to fetch from Firestore if available
+    if (process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+      const config = {
+        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      };
+      initFirebase(config);
+      const db = getDb();
+      try {
+        const docSnap = await getDoc(doc(db, 'gameTypes', templateName));
+        if (docSnap.exists()) {
+          template = { name: templateName, ...docSnap.data() };
+        }
+      } catch (err) {
+        console.error('Error fetching template from Firestore', err);
+      }
+    }
+
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
   }
 
   const prompt = buildPrompt(template, brandTone, useCase);
