@@ -34,7 +34,8 @@ export default function Home() {
   };
 
   return (
-    <main className="p-4 max-w-2xl mx-auto">
+    <div className="min-h-screen flex items-center justify-center">
+      <main className="bg-[#212121] max-w-[750px] w-full p-[8px] sm:p-[30px] rounded-[10px]">
       <h1 className="text-2xl font-bold mb-4">My TOIbox Game Generator</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -83,6 +84,7 @@ export default function Home() {
           <pre className="whitespace-pre-wrap">{result}</pre>
         </div>
       )}
-    </main>
+      </main>
+    </div>
   );
 }
