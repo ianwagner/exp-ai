@@ -7,20 +7,29 @@ export default function Home() {
   const [useCase, setUseCase] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setResult('');
-    const res = await fetch('/api/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ templateName, brandTone, useCase }),
-    });
-    const data = await res.json();
-    if (data.result) setResult(data.result);
+    setError('');
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ templateName, brandTone, useCase }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error || 'Failed to generate');
+      }
+      if (data?.result) setResult(data.result);
+    } catch (err) {
+      setError(err.message || 'An unexpected error occurred.');
+    }
     setLoading(false);
   };
 
@@ -65,6 +74,9 @@ export default function Home() {
           {loading ? 'Generating...' : 'Generate Game'}
         </button>
       </form>
+      {error && (
+        <div className="mt-4 text-red-500">{error}</div>
+      )}
       {result && (
         <div className="mt-6 p-4 border rounded">
           <h2 className="font-bold mb-2">Result</h2>
