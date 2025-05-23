@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import templates from '../data/templates.json';
+import GameTypeSettings from '../components/GameTypeSettings';
 
 export default function Home() {
   const [templateName, setTemplateName] = useState(templates[0]?.name || '');
@@ -37,6 +38,7 @@ export default function Home() {
 <div className="min-h-screen flex items-center justify-center md:p-5">
       <main className="bg-[#212121] max-w-[750px] w-full p-[8px] sm:p-[20px] rounded-[10px]">
       <h1 className="text-2xl font-bold mb-4">My TOIbox Game Generator</h1>
+      <GameTypeSettings />
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block mb-1">Game Template</label>
