@@ -13,7 +13,7 @@ body {
 
 /* Form controls */
 .form-control {
-  @apply w-full bg-[#efefef] text-white p-2 border border-[#393939] rounded-md;
+  @apply w-full bg-[#EFEFEF] text-white p-2 border border-[#393939] rounded-md;
 }
 
 .form-input-light {
