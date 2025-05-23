@@ -34,8 +34,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <main className="bg-[#212121] max-w-[750px] w-full p-[8px] sm:p-[30px] rounded-[10px]">
+    <div className="min-h-screen flex items-center justify-center md:p-5">
+      <main className="bg-[#212121] max-w-[750px] w-full p-[8px] sm:p-[20px] rounded-[10px]">
       <h1 className="text-2xl font-bold mb-4">My TOIbox Game Generator</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -43,7 +43,7 @@ export default function Home() {
           <select
             value={templateName}
             onChange={(e) => setTemplateName(e.target.value)}
-            className="border p-2 w-full"
+            className="w-full bg-[#2C2C2C] text-white p-[5px] border border-[#393939] rounded-[8px]"
           >
             {templates.map((t) => (
               <option key={t.name} value={t.name}>{t.name}</option>
@@ -56,7 +56,7 @@ export default function Home() {
             type="text"
             value={brandTone}
             onChange={(e) => setBrandTone(e.target.value)}
-            className="border p-2 w-full"
+            className="w-full bg-[#2C2C2C] text-white p-[5px] border border-[#393939] rounded-[8px]"
           />
         </div>
         <div>
@@ -64,15 +64,15 @@ export default function Home() {
           <textarea
             value={useCase}
             onChange={(e) => setUseCase(e.target.value)}
-            className="border p-2 w-full"
+            className="w-full bg-[#2C2C2C] text-white p-[5px] border border-[#393939] rounded-[8px]"
           />
         </div>
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2"
+          className="bg-[#feb710] text-[#121212] px-[10px] py-[10px] rounded-[100px] block mx-auto"
           disabled={loading}
         >
-          {loading ? 'Generating...' : 'Generate Game'}
+          {loading ? 'Generating...' : 'GENERATE'}
         </button>
       </form>
       {error && (
