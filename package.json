@@ -15,8 +15,7 @@
   "devDependencies": {
     "tailwindcss": "latest",
     "postcss": "latest",
-    "autoprefixer": "latest",
-    "@tailwindcss/postcss": "latest"
+    "autoprefixer": "latest"
   },
   "license": "MIT"
 }
