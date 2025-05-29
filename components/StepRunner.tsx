@@ -1,6 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { getSteps, getOutputRules } from '../lib/firebaseHelpers';
 import type { Step, OutputRule } from '../lib/firebaseSchema';
+import buildPrompt from '../utils/buildPrompt';
 
 // Basic step runner that dynamically renders form inputs for each step.
 // TODO: refine once the step and output schemas are finalized.
@@ -45,28 +46,32 @@ const StepRunner = () => {
     setValues((prev) => ({ ...prev, [`${stepId}:${name}`]: val }));
   };
 
-  const buildPrompt = (ruleId: string | undefined, stepId: string, extra?: Record<string, string>) => {
+  const buildRulePrompt = (
+    ruleId: string | undefined,
+    stepId: string,
+    extra?: Record<string, string>
+  ) => {
     if (!ruleId) return '';
     const rule = outputs.find((o) => o.id === ruleId);
     if (!rule || typeof (rule as any).template !== 'string') return '';
-    let prompt: string = (rule as any).template;
-    const inputs = extractInputs(steps.find((s) => s.id === stepId) || {} as Step);
+    const template: string = (rule as any).template;
+    const inputs = extractInputs(
+      steps.find((s) => s.id === stepId) || ({} as Step)
+    );
+    const context: Record<string, string> = {};
     inputs.forEach((inp) => {
       const key = inp.name;
-      const value = values[`${stepId}:${key}`] || '';
-      prompt = prompt.replace(new RegExp(`{${key}}`, 'g'), value);
+      context[key] = values[`${stepId}:${key}`] || '';
     });
     if (extra) {
-      Object.entries(extra).forEach(([k, v]) => {
-        prompt = prompt.replace(new RegExp(`{${k}}`, 'g'), v);
-      });
+      Object.assign(context, extra);
     }
-    return prompt;
+    return buildPrompt(template, context);
   };
 
   const runStep = async (e: FormEvent, step: Step) => {
     e.preventDefault();
-    const prompt = buildPrompt((step as any).outputRule, step.id);
+    const prompt = buildRulePrompt((step as any).outputRule, step.id);
     if (!prompt) return;
     setLoading(true);
     setError('');
@@ -86,7 +91,9 @@ const StepRunner = () => {
   };
 
   const createFinal = async (step: Step) => {
-    const prompt = buildPrompt((step as any).finalOutputRule, step.id, { description: intermediate });
+    const prompt = buildRulePrompt((step as any).finalOutputRule, step.id, {
+      description: intermediate,
+    });
     if (!prompt) return;
     setLoading(true);
     setError('');
