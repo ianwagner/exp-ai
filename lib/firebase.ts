@@ -13,7 +13,8 @@ const firebaseConfig = {
 };
 
 let firebaseApp: FirebaseApp;
-let db: Firestore;
+// db may be initialized later so start as undefined
+let db: Firestore | undefined;
 
 function initDefaultApp() {
   if (!firebaseApp) {
@@ -40,11 +41,12 @@ export function getDb(): Firestore {
   if (!db) {
     initDefaultApp();
   }
-  return db;
+  // db is guaranteed to be initialized after initDefaultApp
+  return db as Firestore;
 }
 
 // Initialize using environment configuration by default
 initDefaultApp();
 
 export { db };
-export default db;
+export default db as Firestore;
