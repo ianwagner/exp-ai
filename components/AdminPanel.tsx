@@ -26,7 +26,12 @@ interface StepItem extends Step {
   isNew?: boolean;
 }
 
-const blankInput = (): InputField => ({ name: '', label: '', type: 'text' });
+const blankInput = (): InputField => ({
+  name: '',
+  label: '',
+  type: 'text',
+  componentType: '',
+});
 
 const AdminStepsView = () => {
   const [items, setItems] = useState<StepItem[]>([]);
@@ -163,7 +168,18 @@ const AdminStepsView = () => {
                     <option value="text">Text</option>
                     <option value="textarea">Textarea</option>
                     <option value="number">Number</option>
+                    <option value="component">Component</option>
                   </select>
+                  {inp.type === 'component' && (
+                    <input
+                      className="form-input-light"
+                      placeholder="Component Type"
+                      value={inp.componentType || ''}
+                      onChange={(e) =>
+                        handleInputChange(idx, iIdx, 'componentType', e.target.value)
+                      }
+                    />
+                  )}
                   <button
                     onClick={() => deleteInput(idx, iIdx)}
                     className="btn btn-danger"

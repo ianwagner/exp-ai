@@ -2,6 +2,7 @@ export interface InputField {
   name: string;
   label?: string;
   type?: string;
+  componentType?: string;
 }
 
 export interface Step {
