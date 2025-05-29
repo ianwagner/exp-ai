@@ -80,7 +80,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: process.env.OPENAI_MODEL || 'gpt-4',
         messages: [{ role: 'user', content: prompt }],
       }),
     });
