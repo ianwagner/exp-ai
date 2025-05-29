@@ -1,6 +1,6 @@
 import { collection, getDocs } from 'firebase/firestore';
 import db from './firebase';
-import { Step, ComponentInstance, OutputRule } from './firebaseSchema';
+import { Step, ComponentInstance, OutputRule } from './types';
 
 export async function getSteps(): Promise<Step[]> {
   const snapshot = await getDocs(collection(db, 'steps'));
