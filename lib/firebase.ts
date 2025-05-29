@@ -12,9 +12,11 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let firebaseApp: FirebaseApp;
-// db may be initialized later so start as undefined
-let db: Firestore | undefined;
+// firebaseApp and db are assigned when the module initializes
+// but TypeScript doesn't know that, so we use the definite
+// assignment assertion operator (!) to silence the error.
+let firebaseApp!: FirebaseApp;
+let db!: Firestore;
 
 function initDefaultApp() {
   if (!firebaseApp) {
