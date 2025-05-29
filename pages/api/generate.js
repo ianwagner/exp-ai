@@ -36,7 +36,35 @@ export default async function handler(req, res) {
     }
   }
 
-  const prompt = buildPrompt(template, brandTone, useCase);
+  // Build a prompt string using the generic template replacer
+  const context = {
+    brandTone: brandTone || '',
+    useCase: useCase || '',
+    formatInstruction: template.formatInstruction || '',
+    useCases: template.useCases || '',
+    mechanics: template.mechanics || '',
+    description: template.description || '',
+  };
+
+  const templateString = [
+    '{{description}}',
+    brandTone ? 'Tone: {{brandTone}}.' : '',
+    useCase ? 'Use case: {{useCase}}.' : '',
+    '',
+    template.formatInstruction
+      ? 'Instructions: {{formatInstruction}}'
+      : [
+          template.useCases ? 'Use Cases: {{useCases}}' : '',
+          template.mechanics ? 'Game Mechanics: {{mechanics}}' : '',
+        ]
+          .filter(Boolean)
+          .join('\n'),
+  ]
+    .filter(Boolean)
+    .join('\n')
+    .trim();
+
+  const prompt = buildPrompt(templateString, context);
 
   if (!process.env.OPENAI_API_KEY) {
     return res
