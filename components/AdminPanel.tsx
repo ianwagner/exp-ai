@@ -7,6 +7,7 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import buildPrompt from '../utils/buildPrompt';
 import type {
   Step,
   ComponentType,
@@ -35,6 +36,12 @@ const blankInput = (): InputField => ({
 
 const AdminStepsView = () => {
   const [items, setItems] = useState<StepItem[]>([]);
+  const [componentTypes, setComponentTypes] = useState<ComponentType[]>([]);
+  const [componentInstances, setComponentInstances] = useState<
+    Record<string, ComponentInstance[]>
+  >({});
+  const [outputRules, setOutputRules] = useState<OutputRule[]>([]);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -45,6 +52,29 @@ const AdminStepsView = () => {
         list.push({ id: d.id, ...data, expectedInputs: data.expectedInputs ?? [] });
       });
       setItems(list);
+
+      const compsSnap = await getDocs(collection(db, 'components'));
+      const types: ComponentType[] = [];
+      for (const docSnap of compsSnap.docs) {
+        const data = docSnap.data() as Omit<ComponentType, 'id'>;
+        types.push({ id: docSnap.id, ...data });
+        const instSnap = await getDocs(collection(db, `components/${docSnap.id}/instances`));
+        const instList: ComponentInstance[] = [];
+        instSnap.forEach((di) => {
+          const dData = di.data() as Omit<ComponentInstance, 'id'>;
+          instList.push({ id: di.id, ...dData });
+        });
+        setComponentInstances((prev) => ({ ...prev, [docSnap.id]: instList }));
+      }
+      setComponentTypes(types);
+
+      const outSnap = await getDocs(collection(db, 'outputs'));
+      const outs: OutputRule[] = [];
+      outSnap.forEach((d) => {
+        const data = d.data() as Omit<OutputRule, 'id'>;
+        outs.push({ id: d.id, ...data });
+      });
+      setOutputRules(outs);
     };
     fetchItems();
   }, []);
@@ -108,6 +138,70 @@ const AdminStepsView = () => {
     setItems((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const StepPreview = ({ step }: { step: Step }) => {
+    const [values, setValues] = useState<Record<string, string>>({});
+    const output = outputRules.find((o) => o.id === step.output);
+    const template = output?.chatPromptTemplate || '';
+    const inputs = step.expectedInputs || [];
+    const build = () => {
+      const ctx: Record<string, any> = {};
+      inputs.forEach((inp) => {
+        const val = values[inp.name] || '';
+        if (inp.type === 'component' && inp.componentType) {
+          const inst = componentInstances[inp.componentType]?.find((c) => c.id === val);
+          ctx[inp.name] = inst ? inst.values : {};
+        } else {
+          ctx[inp.name] = val;
+        }
+      });
+      return buildPrompt(template, ctx);
+    };
+
+    const prompt = build();
+
+    const handle = (name: string, val: string) => {
+      setValues((prev) => ({ ...prev, [name]: val }));
+    };
+
+    return (
+      <div className="border p-2 rounded space-y-2 mt-2">
+        {inputs.map((inp) => (
+          <div key={inp.name} className="space-y-1">
+            <label className="block text-sm">{inp.label || inp.name}</label>
+            {inp.type === 'textarea' ? (
+              <textarea
+                className="form-input-light"
+                value={values[inp.name] || ''}
+                onChange={(e) => handle(inp.name, e.target.value)}
+              />
+            ) : inp.type === 'component' ? (
+              <select
+                className="form-input-light"
+                value={values[inp.name] || ''}
+                onChange={(e) => handle(inp.name, e.target.value)}
+              >
+                <option value="">Select...</option>
+                {(componentInstances[inp.componentType || ''] || []).map((ci) => (
+                  <option key={ci.id} value={ci.id}>
+                    {ci.id}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className="form-input-light"
+                type={inp.type || 'text'}
+                value={values[inp.name] || ''}
+                onChange={(e) => handle(inp.name, e.target.value)}
+              />
+            )}
+          </div>
+        ))}
+        <textarea className="form-input-light h-24" readOnly value={prompt} />
+      </div>
+    );
+  };
+
   const addItem = () => {
     setItems((prev) => [
       ...prev,
@@ -119,87 +213,103 @@ const AdminStepsView = () => {
     <div>
       <ul className="space-y-4">
         {items.map((item, idx) => (
-          <li key={idx} className="border p-2 rounded space-y-2">
-            <input
-              className="form-input-light"
-              placeholder="ID"
-              value={item.id}
-              disabled={!item.isNew}
-              onChange={(e) => handleChange(idx, 'id', e.target.value)}
-            />
-            <input
-              className="form-input-light"
-              placeholder="Name"
-              value={item.name}
-              onChange={(e) => handleChange(idx, 'name', e.target.value)}
-            />
-            <textarea
-              className="form-input-light h-24"
-              placeholder="Text"
-              value={item.text}
-              onChange={(e) => handleChange(idx, 'text', e.target.value)}
-            />
-            <input
-              className="form-input-light"
-              placeholder="Output Rule ID"
-              value={item.output}
-              onChange={(e) => handleChange(idx, 'output', e.target.value)}
-            />
-            <div className="space-y-2">
-              {(item.expectedInputs || []).map((inp, iIdx) => (
-                <div key={iIdx} className="flex space-x-2 items-center">
-                  <input
-                    className="form-input-light"
-                    placeholder="Name"
-                    value={inp.name}
-                    onChange={(e) => handleInputChange(idx, iIdx, 'name', e.target.value)}
-                  />
-                  <input
-                    className="form-input-light"
-                    placeholder="Label"
-                    value={inp.label || ''}
-                    onChange={(e) => handleInputChange(idx, iIdx, 'label', e.target.value)}
-                  />
-                  <select
-                    className="form-input-light"
-                    value={inp.type || 'text'}
-                    onChange={(e) => handleInputChange(idx, iIdx, 'type', e.target.value)}
-                  >
-                    <option value="text">Text</option>
-                    <option value="textarea">Textarea</option>
-                    <option value="number">Number</option>
-                    <option value="component">Component</option>
-                  </select>
-                  {inp.type === 'component' && (
-                    <input
-                      className="form-input-light"
-                      placeholder="Component Type"
-                      value={inp.componentType || ''}
-                      onChange={(e) =>
-                        handleInputChange(idx, iIdx, 'componentType', e.target.value)
-                      }
-                    />
-                  )}
+          <li key={idx} className="border rounded">
+            <details className="p-2" open={item.isNew}>
+              <summary className="cursor-pointer font-semibold">
+                {item.id || 'New Step'} {item.name && <span className="text-gray-500 ml-2">{item.name}</span>}
+              </summary>
+              <div className="space-y-2 mt-2">
+                <input
+                  className="form-input-light"
+                  placeholder="ID"
+                  value={item.id}
+                  disabled={!item.isNew}
+                  onChange={(e) => handleChange(idx, 'id', e.target.value)}
+                />
+                <input
+                  className="form-input-light"
+                  placeholder="Name"
+                  value={item.name}
+                  onChange={(e) => handleChange(idx, 'name', e.target.value)}
+                />
+                <textarea
+                  className="form-input-light h-24"
+                  placeholder="Text"
+                  value={item.text}
+                  onChange={(e) => handleChange(idx, 'text', e.target.value)}
+                />
+                <input
+                  className="form-input-light"
+                  placeholder="Output Rule ID"
+                  value={item.output}
+                  onChange={(e) => handleChange(idx, 'output', e.target.value)}
+                />
+                <div className="space-y-2">
+                  {(item.expectedInputs || []).map((inp, iIdx) => (
+                    <div key={iIdx} className="flex space-x-2 items-center">
+                      <input
+                        className="form-input-light"
+                        placeholder="Name"
+                        value={inp.name}
+                        onChange={(e) => handleInputChange(idx, iIdx, 'name', e.target.value)}
+                      />
+                      <input
+                        className="form-input-light"
+                        placeholder="Label"
+                        value={inp.label || ''}
+                        onChange={(e) => handleInputChange(idx, iIdx, 'label', e.target.value)}
+                      />
+                      <select
+                        className="form-input-light"
+                        value={inp.type || 'text'}
+                        onChange={(e) => handleInputChange(idx, iIdx, 'type', e.target.value)}
+                      >
+                        <option value="text">Text</option>
+                        <option value="textarea">Textarea</option>
+                        <option value="number">Number</option>
+                        <option value="component">Component</option>
+                      </select>
+                      {inp.type === 'component' && (
+                        <>
+                          <select
+                            className="form-input-light"
+                            value={inp.componentType || ''}
+                            onChange={(e) => handleInputChange(idx, iIdx, 'componentType', e.target.value)}
+                          >
+                            <option value="">Select Type...</option>
+                            {componentTypes.map((ct) => (
+                              <option key={ct.id} value={ct.id}>
+                                {ct.name}
+                              </option>
+                            ))}
+                          </select>
+                          {/* instance dropdown shown in preview */}
+                        </>
+                      )}
+                      <button
+                        onClick={() => deleteInput(idx, iIdx)}
+                        className="btn btn-danger"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ))}
+                  <button onClick={() => addInput(idx)} className="btn btn-blue">Add Input</button>
+                </div>
+                <div className="flex space-x-2">
+                  <button onClick={() => saveItem(item)} className="btn btn-success">Save</button>
+                  <button onClick={() => deleteItem(idx)} className="btn btn-danger">Delete</button>
                   <button
-                    onClick={() => deleteInput(idx, iIdx)}
-                    className="btn btn-danger"
+                    type="button"
+                    onClick={() => setPreviewIndex(previewIndex === idx ? null : idx)}
+                    className="btn btn-neutral"
                   >
-                    X
+                    Preview
                   </button>
                 </div>
-              ))}
-              <button onClick={() => addInput(idx)} className="btn btn-blue">
-                Add Input
-              </button>
-            </div>
-            <div className="flex space-x-2">
-              <button onClick={() => saveItem(item)} className="btn btn-success">
-                Save
-              </button>
-              <button onClick={() => deleteItem(idx)} className="btn btn-danger">
-                Delete
-              </button>
-            </div>
+                {previewIndex === idx && <StepPreview step={item} />}
+              </div>
+            </details>
           </li>
         ))}
       </ul>
@@ -408,20 +518,34 @@ const AdminComponentsView = () => {
     <div>
       <ul className="space-y-4">
         {types.map((type, idx) => (
-          <li key={idx} className="border p-2 rounded space-y-2">
-            <input
-              className="form-input-light"
-              placeholder="Type ID"
-              value={type.id}
-              disabled={!type.isNew}
-              onChange={(e) => handleTypeField(idx, 'id', e.target.value)}
-            />
-            <input
-              className="form-input-light"
-              placeholder="Name"
-              value={type.name}
-              onChange={(e) => handleTypeField(idx, 'name', e.target.value)}
-            />
+          <li key={idx} className="border rounded">
+            <details className="p-2" open={type.isNew || type.expanded}>
+              <summary
+                className="cursor-pointer font-semibold"
+                onClick={() =>
+                  setTypes((prev) => {
+                    const copy = [...prev];
+                    copy[idx].expanded = !copy[idx].expanded;
+                    return copy;
+                  })
+                }
+              >
+                {type.id || 'New Type'} {type.name && <span className="text-gray-500 ml-2">{type.name}</span>}
+              </summary>
+              <div className="space-y-2 mt-2">
+                <input
+                  className="form-input-light"
+                  placeholder="Type ID"
+                  value={type.id}
+                  disabled={!type.isNew}
+                  onChange={(e) => handleTypeField(idx, 'id', e.target.value)}
+                />
+                <input
+                  className="form-input-light"
+                  placeholder="Name"
+                  value={type.name}
+                  onChange={(e) => handleTypeField(idx, 'name', e.target.value)}
+                />
             <div className="space-y-2">
               {(type.fields || []).map((f, fIdx) => (
                 <div key={fIdx} className="flex space-x-2 items-center">
@@ -529,6 +653,8 @@ const AdminComponentsView = () => {
                 </button>
               </div>
             )}
+            </div>
+            </details>
           </li>
         ))}
       </ul>
@@ -548,6 +674,7 @@ interface OutputItem extends OutputRule {
 
 const AdminOutputsView = () => {
   const [items, setItems] = useState<OutputItem[]>([]);
+  const [expanded, setExpanded] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -627,71 +754,94 @@ const AdminOutputsView = () => {
     ]);
   };
 
+  const highlightTemplate = (tpl: string, uses: string[]) => {
+    return tpl.split(/(\{\{.*?\}\})/g).map((part, i) => {
+      if (/\{\{.*\}\}/.test(part)) {
+        const key = part.replace(/\{\{|\}\}/g, '').trim();
+        const matched = uses.includes(key) ? 'bg-green-100' : 'bg-yellow-100';
+        return (
+          <span key={i} className={matched + ' px-1 rounded'}>
+            {part}
+          </span>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
   return (
     <div>
       <ul className="space-y-4">
         {items.map((item, idx) => (
-          <li key={idx} className="border p-2 rounded space-y-2">
-            <input
-              className="form-input-light"
-              placeholder="ID"
-              value={item.id}
-              disabled={!item.isNew}
-              onChange={(e) => handleChange(idx, 'id', e.target.value)}
-            />
-            <input
-              className="form-input-light"
-              placeholder="Output Name"
-              value={item.outputName}
-              onChange={(e) => handleChange(idx, 'outputName', e.target.value)}
-            />
-            <input
-              className="form-input-light"
-              placeholder="From Step"
-              value={item.fromStep}
-              onChange={(e) => handleChange(idx, 'fromStep', e.target.value)}
-            />
-            <div className="space-y-2">
-              {(item.uses || []).map((u, uIdx) => (
-                <div key={uIdx} className="flex space-x-2 items-center">
-                  <input
-                    className="form-input-light"
-                    placeholder="Uses"
-                    value={u}
-                    onChange={(e) => handleUseChange(idx, uIdx, e.target.value)}
-                  />
-                  <button
-                    onClick={() => removeUse(idx, uIdx)}
-                    className="btn btn-danger"
-                  >
-                    X
+          <li key={idx} className="border rounded">
+            <details className="p-2" open={expanded === idx || item.isNew}>
+              <summary
+                className="cursor-pointer font-semibold"
+                onClick={() => setExpanded(expanded === idx ? null : idx)}
+              >
+                {item.id || 'New Rule'}{' '}
+                {item.outputName && <span className="text-gray-500 ml-2">{item.outputName}</span>}
+              </summary>
+              <div className="space-y-2 mt-2">
+                <input
+                  className="form-input-light"
+                  placeholder="ID"
+                  value={item.id}
+                  disabled={!item.isNew}
+                  onChange={(e) => handleChange(idx, 'id', e.target.value)}
+                />
+                <input
+                  className="form-input-light"
+                  placeholder="Output Name"
+                  value={item.outputName}
+                  onChange={(e) => handleChange(idx, 'outputName', e.target.value)}
+                />
+                <input
+                  className="form-input-light"
+                  placeholder="From Step"
+                  value={item.fromStep}
+                  onChange={(e) => handleChange(idx, 'fromStep', e.target.value)}
+                />
+                <div className="space-y-2">
+                  {(item.uses || []).map((u, uIdx) => (
+                    <div key={uIdx} className="flex space-x-2 items-center">
+                      <input
+                        className="form-input-light"
+                        placeholder="Uses"
+                        value={u}
+                        onChange={(e) => handleUseChange(idx, uIdx, e.target.value)}
+                      />
+                      <button
+                        onClick={() => removeUse(idx, uIdx)}
+                        className="btn btn-danger"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ))}
+                  <button onClick={() => addUse(idx)} className="btn btn-blue">
+                    Add Use
                   </button>
                 </div>
-              ))}
-              <button onClick={() => addUse(idx)} className="btn btn-blue">
-                Add Use
-              </button>
-            </div>
-            <textarea
-              className="form-input-light h-24"
-              placeholder="Chat Prompt Template"
-              value={item.chatPromptTemplate}
-              onChange={(e) => handleChange(idx, 'chatPromptTemplate', e.target.value)}
-            />
-            <div className="flex space-x-2">
-              <button onClick={() => saveItem(item)} className="btn btn-success">
-                Save
-              </button>
-              <button onClick={() => deleteItem(idx)} className="btn btn-danger">
-                Delete
-              </button>
-            </div>
+                <textarea
+                  className="form-input-light h-24"
+                  placeholder="Chat Prompt Template"
+                  value={item.chatPromptTemplate}
+                  onChange={(e) => handleChange(idx, 'chatPromptTemplate', e.target.value)}
+                />
+                <div className="text-sm whitespace-pre-wrap border p-2 rounded">
+                  {highlightTemplate(item.chatPromptTemplate, item.uses || [])}
+                </div>
+                <div className="flex space-x-2">
+                  <button onClick={() => saveItem(item)} className="btn btn-success">Save</button>
+                  <button onClick={() => deleteItem(idx)} className="btn btn-danger">Delete</button>
+                </div>
+              </div>
+            </details>
           </li>
         ))}
       </ul>
-      <button onClick={addItem} className="btn btn-blue mt-4">
-        Add Output Rule
-      </button>
+      <button onClick={addItem} className="btn btn-blue mt-4">Add Output Rule</button>
     </div>
   );
 };
