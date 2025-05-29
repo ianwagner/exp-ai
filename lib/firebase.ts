@@ -1,8 +1,8 @@
 // lib/firebase.ts
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
-// Your web app's Firebase configuration
+// Default Firebase configuration taken from environment variables
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -12,8 +12,39 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+let firebaseApp: FirebaseApp;
+let db: Firestore;
+
+function initDefaultApp() {
+  if (!firebaseApp) {
+    if (!getApps().length) {
+      firebaseApp = initializeApp(firebaseConfig);
+    } else {
+      firebaseApp = getApps()[0];
+    }
+    db = getFirestore(firebaseApp);
+  }
+}
+
+export function initFirebase(config: object): FirebaseApp {
+  if (!getApps().length) {
+    firebaseApp = initializeApp(config);
+    db = getFirestore(firebaseApp);
+  } else {
+    firebaseApp = getApps()[0];
+  }
+  return firebaseApp;
+}
+
+export function getDb(): Firestore {
+  if (!db) {
+    initDefaultApp();
+  }
+  return db;
+}
+
+// Initialize using environment configuration by default
+initDefaultApp();
 
 export { db };
 export default db;
