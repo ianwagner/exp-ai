@@ -1,22 +1,16 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { getSteps, getOutputRules } from '../lib/firebaseHelpers';
-import type { Step, OutputRule } from '../lib/firebaseSchema';
+import type { Step, OutputRule, InputField } from '../lib/types';
 import buildPrompt from '../utils/buildPrompt';
 
 // Basic step runner that dynamically renders form inputs for each step.
 // TODO: refine once the step and output schemas are finalized.
 
-interface InputDef {
-  name: string;
-  label?: string;
-  type?: string;
-}
-
-const extractInputs = (step: Step): InputDef[] => {
+const extractInputs = (step: Step): InputField[] => {
   const list = step.expectedInputs as any[] | undefined;
   if (!Array.isArray(list)) return [];
   return list.map((item) =>
-    typeof item === 'string' ? { name: item } : (item as InputDef)
+    typeof item === 'string' ? { name: item } : (item as InputField)
   );
 };
 
@@ -29,7 +23,7 @@ const StepRunner = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const finalStep = steps.find((s) => (s as any).finalOutputRule);
+  const finalStep = steps[steps.length - 1];
 
   useEffect(() => {
     const load = async () => {
@@ -73,7 +67,7 @@ const StepRunner = () => {
 
   const runStep = async (e: FormEvent, step: Step) => {
     e.preventDefault();
-    const prompt = buildRulePrompt((step as any).outputRule, step.id);
+    const prompt = buildRulePrompt(step.output, step.id);
     if (!prompt) return;
     setLoading(true);
     setError('');
@@ -93,7 +87,7 @@ const StepRunner = () => {
   };
 
   const createFinal = async (step: Step) => {
-    const prompt = buildRulePrompt((step as any).finalOutputRule, step.id, {
+    const prompt = buildRulePrompt(step.output, step.id, {
       description: intermediate,
     });
     if (!prompt) return;
