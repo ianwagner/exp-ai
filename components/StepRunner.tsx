@@ -29,6 +29,8 @@ const StepRunner = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const finalStep = steps.find((s) => (s as any).finalOutputRule);
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -147,9 +149,9 @@ const StepRunner = () => {
             value={intermediate}
             onChange={(e) => setIntermediate(e.target.value)}
           />
-          {steps[0] && (steps[0] as any).finalOutputRule && (
+          {finalStep && (
             <button
-              onClick={() => createFinal(steps[0])}
+              onClick={() => createFinal(finalStep)}
               className="btn btn-blue"
               disabled={loading}
             >
