@@ -1,6 +1,6 @@
 import templates from '../../data/templates.json';
 import buildPrompt from '../../utils/buildPrompt';
-import { initFirebase, getDb } from '../../utils/firebase';
+import { initFirebase, getDb } from '../../lib/firebase';
 import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
 
 export default async function handler(req, res) {
