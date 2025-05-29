@@ -126,12 +126,20 @@ const StepRunner = () => {
             {inputs.map((inp) => (
               <div key={inp.name}>
                 <label className="block mb-1 capitalize">{inp.label || inp.name}</label>
-                <input
-                  type={inp.type === 'textarea' ? 'text' : inp.type || 'text'}
-                  className="form-control"
-                  value={values[`${step.id}:${inp.name}`] || ''}
-                  onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
-                />
+                {inp.type === 'textarea' ? (
+                  <textarea
+                    className="form-control"
+                    value={values[`${step.id}:${inp.name}`] || ''}
+                    onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
+                  />
+                ) : (
+                  <input
+                    type={inp.type || 'text'}
+                    className="form-control"
+                    value={values[`${step.id}:${inp.name}`] || ''}
+                    onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
+                  />
+                )}
               </div>
             ))}
             <button type="submit" className="btn btn-primary" disabled={loading}>
