@@ -754,8 +754,8 @@ const AdminOutputsView = () => {
     ]);
   };
 
-  const highlightTemplate = (tpl: string, uses: string[]) => {
-    return tpl.split(/(\{\{.*?\}\})/g).map((part, i) => {
+  const highlightTemplate = (tpl: string | undefined, uses: string[] = []) => {
+    return (tpl ?? '').split(/(\{\{.*?\}\})/g).map((part, i) => {
       if (/\{\{.*\}\}/.test(part)) {
         const key = part.replace(/\{\{|\}\}/g, '').trim();
         const matched = uses.includes(key) ? 'bg-green-100' : 'bg-yellow-100';
