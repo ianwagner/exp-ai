@@ -42,7 +42,7 @@ const AdminStepsView = () => {
       const list: StepItem[] = [];
       snapshot.forEach((d) => {
         const data = d.data() as Omit<StepItem, 'id' | 'isNew'>;
-        list.push({ id: d.id, expectedInputs: [], ...data });
+        list.push({ id: d.id, ...data, expectedInputs: data.expectedInputs ?? [] });
       });
       setItems(list);
     };
@@ -555,7 +555,7 @@ const AdminOutputsView = () => {
       const list: OutputItem[] = [];
       snapshot.forEach((d) => {
         const data = d.data() as Omit<OutputItem, 'id' | 'isNew'>;
-        list.push({ id: d.id, uses: [], ...data });
+        list.push({ id: d.id, ...data, uses: data.uses ?? [] });
       });
       setItems(list);
     };
