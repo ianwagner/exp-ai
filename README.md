@@ -33,7 +33,7 @@ dialog. Set it to any password you like.
 
 - Select a game template and generate content based on brand tone and use case.
 - Example templates are stored in `data/templates.json`.
-- API route `/api/generate` securely calls OpenAI using your API key.
+- API route `/api/chat` securely calls OpenAI using your API key.
 - Firebase support is included for optional history storage.
 - Prompt templates support `{{key}}` placeholders and nested paths like `{{user.name}}`.
 
