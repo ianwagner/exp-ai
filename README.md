@@ -33,6 +33,20 @@ dialog. Set it to any password you like.
 - API route `/api/generate` securely calls OpenAI using your API key.
 - Firebase support is included for optional history storage.
 
+## Prompt Utility
+
+`buildPrompt` in `utils/buildPrompt.ts` assembles the text sent to OpenAI. Pass
+it a template object along with optional brand tone and use case:
+
+```ts
+import buildPrompt from './utils/buildPrompt'
+
+const prompt = buildPrompt(template, 'playful', 'marketing');
+```
+
+Missing values are skipped, so you can omit the tone or use case if they do not
+apply.
+
 ## Deployment
 
 Deploy this project on Vercel using the **Next.js** preset. When Vercel detects a
