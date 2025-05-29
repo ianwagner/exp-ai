@@ -32,6 +32,7 @@ dialog. Set it to any password you like.
 - Example templates are stored in `data/templates.json`.
 - API route `/api/generate` securely calls OpenAI using your API key.
 - Firebase support is included for optional history storage.
+- Prompt templates support `{{key}}` placeholders and nested paths like `{{user.name}}`.
 
 ## Deployment
 
