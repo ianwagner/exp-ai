@@ -3,6 +3,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import templates from '../data/templates.json';
 import GameTypeSettings from '../components/GameTypeSettings';
 import { db } from '../lib/firebase';
+import buildPrompt from '../utils/buildPrompt';
 
 export default function Home() {
   const [gameTypes, setGameTypes] = useState(templates);
@@ -40,12 +41,43 @@ export default function Home() {
     setResult('');
     setError('');
     try {
-      const res = await fetch('/api/generate', {
+      const template = gameTypes.find((t) => t.name === templateName) || {};
+
+      const context = {
+        brandTone: brandTone || '',
+        useCase: useCase || '',
+        formatInstruction: template.formatInstruction || '',
+        useCases: template.useCases || '',
+        mechanics: template.mechanics || '',
+        description: template.description || '',
+      };
+
+      const templateString = [
+        '{{description}}',
+        brandTone ? 'Tone: {{brandTone}}.' : '',
+        useCase ? 'Use case: {{useCase}}.' : '',
+        '',
+        template.formatInstruction
+          ? 'Instructions: {{formatInstruction}}'
+          : [
+              template.useCases ? 'Use Cases: {{useCases}}' : '',
+              template.mechanics ? 'Game Mechanics: {{mechanics}}' : '',
+            ]
+              .filter(Boolean)
+              .join('\n'),
+      ]
+        .filter(Boolean)
+        .join('\n')
+        .trim();
+
+      const prompt = buildPrompt(templateString, context);
+
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ templateName, brandTone, useCase }),
+        body: JSON.stringify({ prompt }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
