@@ -107,7 +107,7 @@ const StepRunner = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/run-step', {
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt }),
@@ -129,7 +129,7 @@ const StepRunner = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/run-step', {
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt }),
