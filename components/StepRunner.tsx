@@ -1,6 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { getSteps, getOutputRules } from '../lib/firebaseHelpers';
 import type { Step, OutputRule } from '../lib/firebaseSchema';
+import buildPrompt from '../utils/buildPrompt';
 
 // Basic step runner that dynamically renders form inputs for each step.
 // TODO: refine once the step and output schemas are finalized.
@@ -11,8 +12,8 @@ interface InputDef {
   type?: string;
 }
 
-const extractInputs = (step: Step): InputDef[] => {
-  const list = step.expectedInputs as any[] | undefined;
+const extractInputs = (step?: Step): InputDef[] => {
+  const list = step?.expectedInputs as (InputDef | string)[] | undefined;
   if (!Array.isArray(list)) return [];
   return list.map((item) =>
     typeof item === 'string' ? { name: item } : (item as InputDef)
@@ -45,28 +46,28 @@ const StepRunner = () => {
     setValues((prev) => ({ ...prev, [`${stepId}:${name}`]: val }));
   };
 
-  const buildPrompt = (ruleId: string | undefined, stepId: string, extra?: Record<string, string>) => {
+  const createPrompt = (
+    ruleId: string | undefined,
+    stepId: string,
+    extra?: Record<string, string>
+  ) => {
     if (!ruleId) return '';
     const rule = outputs.find((o) => o.id === ruleId);
-    if (!rule || typeof (rule as any).template !== 'string') return '';
-    let prompt: string = (rule as any).template;
-    const inputs = extractInputs(steps.find((s) => s.id === stepId) || {} as Step);
+    if (!rule || typeof rule.template !== 'string') return '';
+
+    const inputs = extractInputs(steps.find((s) => s.id === stepId));
+    const vars: Record<string, string> = {};
     inputs.forEach((inp) => {
-      const key = inp.name;
-      const value = values[`${stepId}:${key}`] || '';
-      prompt = prompt.replace(new RegExp(`{${key}}`, 'g'), value);
+      vars[inp.name] = values[`${stepId}:${inp.name}`] || '';
     });
-    if (extra) {
-      Object.entries(extra).forEach(([k, v]) => {
-        prompt = prompt.replace(new RegExp(`{${k}}`, 'g'), v);
-      });
-    }
-    return prompt;
+    if (extra) Object.assign(vars, extra);
+
+    return buildPrompt(rule.template as string, vars);
   };
 
   const runStep = async (e: FormEvent, step: Step) => {
     e.preventDefault();
-    const prompt = buildPrompt((step as any).outputRule, step.id);
+    const prompt = createPrompt(step.outputRule as string | undefined, step.id);
     if (!prompt) return;
     setLoading(true);
     setError('');
@@ -86,7 +87,9 @@ const StepRunner = () => {
   };
 
   const createFinal = async (step: Step) => {
-    const prompt = buildPrompt((step as any).finalOutputRule, step.id, { description: intermediate });
+    const prompt = createPrompt(step.finalOutputRule as string | undefined, step.id, {
+      description: intermediate,
+    });
     if (!prompt) return;
     setLoading(true);
     setError('');
@@ -140,7 +143,7 @@ const StepRunner = () => {
             value={intermediate}
             onChange={(e) => setIntermediate(e.target.value)}
           />
-          {steps[0] && (steps[0] as any).finalOutputRule && (
+          {steps[0] && steps[0].finalOutputRule && (
             <button
               onClick={() => createFinal(steps[0])}
               className="btn btn-blue"
