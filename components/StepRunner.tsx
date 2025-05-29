@@ -1,6 +1,15 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { getSteps, getOutputRules } from '../lib/firebaseHelpers';
-import type { Step, OutputRule, InputField } from '../lib/types';
+import {
+  getSteps,
+  getOutputRules,
+  getComponentInstances,
+} from '../lib/firebaseHelpers';
+import type {
+  Step,
+  OutputRule,
+  InputField,
+  ComponentInstance,
+} from '../lib/types';
 import buildPrompt from '../utils/buildPrompt';
 
 // Basic step runner that dynamically renders form inputs for each step.
@@ -18,6 +27,9 @@ const StepRunner = () => {
   const [steps, setSteps] = useState<Step[]>([]);
   const [outputs, setOutputs] = useState<OutputRule[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
+  const [components, setComponents] = useState<
+    Record<string, ComponentInstance[]>
+  >({});
   const [intermediate, setIntermediate] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -31,6 +43,23 @@ const StepRunner = () => {
         const [s, o] = await Promise.all([getSteps(), getOutputRules()]);
         setSteps(s);
         setOutputs(o);
+
+        const compTypes = new Set<string>();
+        s.forEach((step) => {
+          extractInputs(step).forEach((inp) => {
+            if (inp.type === 'component' && inp.componentType) {
+              compTypes.add(inp.componentType);
+            }
+          });
+        });
+        const entries = await Promise.all(
+          Array.from(compTypes).map(async (t) => [t, await getComponentInstances(t)])
+        );
+        const map: Record<string, ComponentInstance[]> = {};
+        entries.forEach(([t, inst]) => {
+          map[t as string] = inst as ComponentInstance[];
+        });
+        setComponents(map);
       } catch (err) {
         console.error('Failed to load steps', err);
       }
@@ -45,19 +74,25 @@ const StepRunner = () => {
   const buildRulePrompt = (
     ruleId: string | undefined,
     stepId: string,
-    extra?: Record<string, string>
+    extra?: Record<string, any>
   ) => {
     if (!ruleId) return '';
     const rule = outputs.find((o) => o.id === ruleId);
-    if (!rule || typeof (rule as any).template !== 'string') return '';
-    const template: string = (rule as any).template;
+    if (!rule || typeof (rule as any).chatPromptTemplate !== 'string') return '';
+    const template: string = (rule as any).chatPromptTemplate;
     const inputs = extractInputs(
       steps.find((s) => s.id === stepId) || ({} as Step)
     );
-    const context: Record<string, string> = {};
+    const context: Record<string, any> = {};
     inputs.forEach((inp) => {
       const key = inp.name;
-      context[key] = values[`${stepId}:${key}`] || '';
+      const rawVal = values[`${stepId}:${key}`] || '';
+      if (inp.type === 'component' && inp.componentType) {
+        const inst = components[inp.componentType]?.find((c) => c.id === rawVal);
+        context[key] = inst ? inst.values : {};
+      } else {
+        context[key] = rawVal;
+      }
     });
     if (extra) {
       Object.assign(context, extra);
@@ -128,6 +163,19 @@ const StepRunner = () => {
                     value={values[`${step.id}:${inp.name}`] || ''}
                     onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
                   />
+                ) : inp.type === 'component' ? (
+                  <select
+                    className="form-control"
+                    value={values[`${step.id}:${inp.name}`] || ''}
+                    onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    {(components[inp.componentType || ''] || []).map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.id}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <input
                     type={inp.type || 'text'}
