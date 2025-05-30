@@ -106,16 +106,21 @@ const StepRunner = () => {
     return buildPrompt(template, context);
   };
 
-  const parseResult = (text: string): string | string[] => {
-    try {
-      const parsed = JSON.parse(text);
-      if (Array.isArray(parsed)) return parsed.map((v) => String(v));
-    } catch {}
-    const lines = text
-      .split(/\n+/)
-      .map((l) => l.trim().replace(/^\d+\.\s*/, '').replace(/^[-*]\s*/, ''))
-      .filter(Boolean);
-    return lines.length > 1 ? lines : text;
+  const parseResult = (text: string, rule?: OutputRule): string | string[] => {
+    if (rule?.isBranching) {
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) return parsed.map((v) => String(v));
+      } catch {}
+      const lines = text
+        .split(/\n+/)
+        .map((l) =>
+          l.trim().replace(/^\d+\.\s*/, '').replace(/^[-*]\s*/, '')
+        )
+        .filter(Boolean);
+      return lines.length > 1 ? lines : [text];
+    }
+    return text;
   };
 
   const runOutputRule = async (
@@ -139,7 +144,7 @@ const StepRunner = () => {
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error || 'Failed to generate');
       const rawResult = data.result || '';
-      const parsed = parseResult(rawResult);
+      const parsed = parseResult(rawResult, rule);
       if (parentId != null && index !== undefined) {
         setItemOutputs((prev) => {
           const cur = prev[parentId] || {};

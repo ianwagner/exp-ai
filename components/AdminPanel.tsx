@@ -792,6 +792,7 @@ const AdminOutputsView = () => {
         fromOutput: '',
         triggerType: 'auto',
         buttonLabel: '',
+        isBranching: false,
         uses: [],
         chatPromptTemplate: '',
         isNew: true,
@@ -853,22 +854,30 @@ const AdminOutputsView = () => {
                   value={item.fromOutput || ''}
                   onChange={(e) => handleChange(idx, 'fromOutput', e.target.value)}
                 />
-                <select
-                  className="form-input-light"
-                  value={item.triggerType || 'auto'}
-                  onChange={(e) => handleChange(idx, 'triggerType', e.target.value)}
-                >
-                  <option value="auto">Auto</option>
-                  <option value="button">Button</option>
-                </select>
-                {item.triggerType === 'button' && (
-                  <input
-                    className="form-input-light"
-                    placeholder="Button Label"
-                    value={item.buttonLabel || ''}
-                    onChange={(e) => handleChange(idx, 'buttonLabel', e.target.value)}
-                  />
-                )}
+      <select
+        className="form-input-light"
+        value={item.triggerType || 'auto'}
+        onChange={(e) => handleChange(idx, 'triggerType', e.target.value)}
+      >
+        <option value="auto">Auto</option>
+        <option value="button">Button</option>
+      </select>
+      {item.triggerType === 'button' && (
+        <input
+          className="form-input-light"
+          placeholder="Button Label"
+          value={item.buttonLabel || ''}
+          onChange={(e) => handleChange(idx, 'buttonLabel', e.target.value)}
+        />
+      )}
+      <label className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          checked={item.isBranching || false}
+          onChange={(e) => handleChange(idx, 'isBranching', e.target.checked)}
+        />
+        <span>Branching Output</span>
+      </label>
                 <div className="space-y-2">
                   {(item.uses || []).map((u, uIdx) => (
                     <div key={uIdx} className="flex space-x-2 items-center">
