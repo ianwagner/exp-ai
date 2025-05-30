@@ -48,6 +48,7 @@ export const descriptionOutput: OutputRule = {
   id: 'description',
   outputName: 'description',
   fromStep: 'intro',
+  isBranching: true,
   triggerType: 'auto',
   uses: [
     'numDescriptions',

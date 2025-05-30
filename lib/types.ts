@@ -46,4 +46,9 @@ export interface OutputRule {
    * Optional label when triggerType is "button".
    */
   buttonLabel?: string;
+  /**
+   * Whether this output should be treated as branching into multiple items.
+   * If false or omitted, the result is handled as a single block.
+   */
+  isBranching?: boolean;
 }
