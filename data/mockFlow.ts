@@ -48,6 +48,7 @@ export const descriptionOutput: OutputRule = {
   id: 'description',
   outputName: 'description',
   fromStep: 'intro',
+  triggerType: 'auto',
   uses: [
     'numDescriptions',
     'experienceType.description',
@@ -69,7 +70,9 @@ Output each experience as a 1–2 sentence description in a numbered list.
 export const gameBuildOutput: OutputRule = {
   id: 'gamesBuild',
   outputName: 'gamesBuild',
-  fromStep: 'description',
+  fromOutput: 'description',
+  triggerType: 'button',
+  buttonLabel: 'Create Game',
   uses: ['description', 'experienceType.mechanics'],
   chatPromptTemplate: `
 Take this experience description and generate a fully playable trivia game.

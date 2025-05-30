@@ -785,7 +785,17 @@ const AdminOutputsView = () => {
   const addItem = () => {
     setItems((prev) => [
       ...prev,
-      { id: '', outputName: '', fromStep: '', uses: [], chatPromptTemplate: '', isNew: true },
+      {
+        id: '',
+        outputName: '',
+        fromStep: '',
+        fromOutput: '',
+        triggerType: 'auto',
+        buttonLabel: '',
+        uses: [],
+        chatPromptTemplate: '',
+        isNew: true,
+      },
     ]);
   };
 
@@ -837,6 +847,28 @@ const AdminOutputsView = () => {
                   value={item.fromStep}
                   onChange={(e) => handleChange(idx, 'fromStep', e.target.value)}
                 />
+                <input
+                  className="form-input-light"
+                  placeholder="From Output"
+                  value={item.fromOutput || ''}
+                  onChange={(e) => handleChange(idx, 'fromOutput', e.target.value)}
+                />
+                <select
+                  className="form-input-light"
+                  value={item.triggerType || 'auto'}
+                  onChange={(e) => handleChange(idx, 'triggerType', e.target.value)}
+                >
+                  <option value="auto">Auto</option>
+                  <option value="button">Button</option>
+                </select>
+                {item.triggerType === 'button' && (
+                  <input
+                    className="form-input-light"
+                    placeholder="Button Label"
+                    value={item.buttonLabel || ''}
+                    onChange={(e) => handleChange(idx, 'buttonLabel', e.target.value)}
+                  />
+                )}
                 <div className="space-y-2">
                   {(item.uses || []).map((u, uIdx) => (
                     <div key={uIdx} className="flex space-x-2 items-center">
