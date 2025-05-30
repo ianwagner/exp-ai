@@ -35,12 +35,13 @@ const StepRunner = () => {
   const [components, setComponents] = useState<
     Record<string, ComponentInstance[]>
   >(mockComponents);
-  const [intermediate, setIntermediate] = useState<string>('');
-  const [finalResult, setFinalResult] = useState<string>('');
+  const [generated, setGenerated] = useState<Record<string, string>>({});
+  const [outputOrigins, setOutputOrigins] = useState<Record<string, string>>({});
+  const [pendingButtons, setPendingButtons] = useState<
+    { rule: OutputRule; stepId: string }[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const finalStep = steps[steps.length - 1];
 
   useEffect(() => {
     const load = async () => {
@@ -78,18 +79,16 @@ const StepRunner = () => {
   };
 
   const buildRulePrompt = (
-    ruleId: string | undefined,
+    rule: OutputRule,
     stepId: string,
-    extra?: Record<string, any>
+    outMap: Record<string, string>
   ) => {
-    if (!ruleId) return '';
-    const rule = outputs.find((o) => o.id === ruleId);
-    if (!rule || typeof (rule as any).chatPromptTemplate !== 'string') return '';
-    const template: string = (rule as any).chatPromptTemplate;
+    if (!rule || typeof rule.chatPromptTemplate !== 'string') return '';
+    const template: string = rule.chatPromptTemplate;
     const inputs = extractInputs(
       steps.find((s) => s.id === stepId) || ({} as Step)
     );
-    const context: Record<string, any> = {};
+    const context: Record<string, any> = { ...outMap };
     inputs.forEach((inp) => {
       const key = inp.name;
       const rawVal = values[`${stepId}:${key}`] || '';
@@ -100,53 +99,65 @@ const StepRunner = () => {
         context[key] = rawVal;
       }
     });
-    if (extra) {
-      Object.assign(context, extra);
-    }
     return buildPrompt(template, context);
+  };
+
+  const runOutputRule = async (
+    rule: OutputRule,
+    stepId: string,
+    map: Record<string, string>
+  ): Promise<Record<string, string>> => {
+    const prompt = buildRulePrompt(rule, stepId, map);
+    if (!prompt) return map;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || 'Failed to generate');
+      const result = data.result || '';
+      const updated = { ...map, [rule.id]: result };
+      setGenerated(updated);
+      setOutputOrigins((prev) => ({ ...prev, [rule.id]: stepId }));
+      for (const next of outputs.filter((o) => o.fromOutput === rule.id)) {
+        if (next.triggerType === 'button') {
+          setPendingButtons((prev) => [...prev, { rule: next, stepId }]);
+        } else {
+          await runOutputRule(next, stepId, updated);
+        }
+      }
+      setLoading(false);
+      return updated;
+    } catch (err: any) {
+      setError(err.message || 'Request failed');
+      setLoading(false);
+      return map;
+    }
   };
 
   const runStep = async (e: FormEvent, step: Step) => {
     e.preventDefault();
-    const prompt = buildRulePrompt(step.output, step.id);
-    if (!prompt) return;
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.error || 'Failed to generate');
-      setIntermediate(data.result || '');
-    } catch (err: any) {
-      setError(err.message || 'Request failed');
+    let map = { ...generated };
+    const rules = outputs.filter((o) => o.fromStep === step.id);
+    for (const rule of rules) {
+      if (rule.triggerType === 'button') {
+        setPendingButtons((prev) => [...prev, { rule, stepId: step.id }]);
+      } else {
+        map = await runOutputRule(rule, step.id, map);
+      }
     }
-    setLoading(false);
+    setGenerated(map);
   };
 
-  const createFinal = async (step: Step) => {
-    const prompt = buildRulePrompt(step.output, step.id, {
-      description: intermediate,
-    });
-    if (!prompt) return;
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.error || 'Failed to generate');
-      setFinalResult(data.result || '');
-    } catch (err: any) {
-      setError(err.message || 'Request failed');
-    }
-    setLoading(false);
+  const handleButton = async (index: number) => {
+    const btn = pendingButtons[index];
+    setPendingButtons((prev) => prev.filter((_, i) => i !== index));
+    const map = await runOutputRule(btn.rule, btn.stepId, generated);
+    setGenerated(map);
   };
 
   return (
@@ -198,29 +209,28 @@ const StepRunner = () => {
           </form>
         );
       })}
-      {intermediate && (
-        <div className="space-y-2">
+      {Object.entries(generated).map(([id, text]) => (
+        <div key={id} className="space-y-1">
+          <h4 className="font-bold capitalize">{id}</h4>
           <textarea
             className="form-control"
-            value={intermediate}
-            onChange={(e) => setIntermediate(e.target.value)}
+            value={text}
+            onChange={(e) =>
+              setGenerated((prev) => ({ ...prev, [id]: e.target.value }))
+            }
           />
-          {finalStep && (
-            <button
-              onClick={() => createFinal(finalStep)}
-              className="btn btn-blue"
-              disabled={loading}
-            >
-              {loading ? 'Creating...' : 'Create'}
-            </button>
-          )}
         </div>
-      )}
-      {finalResult && (
-        <div className="mt-4 p-4 border rounded">
-          <pre className="whitespace-pre-wrap">{finalResult}</pre>
-        </div>
-      )}
+      ))}
+      {pendingButtons.map((btn, idx) => (
+        <button
+          key={btn.rule.id}
+          onClick={() => handleButton(idx)}
+          className="btn btn-blue"
+          disabled={loading}
+        >
+          {loading ? 'Running...' : btn.rule.buttonLabel || 'Run'}
+        </button>
+      ))}
       {error && <div className="text-red-500">{error}</div>}
     </div>
   );

@@ -28,7 +28,22 @@ export interface ComponentInstance {
 export interface OutputRule {
   id: string;
   outputName: string;
-  fromStep: string;
+  /**
+   * Step ID that triggers this rule. Mutually exclusive with `fromOutput`.
+   */
+  fromStep?: string;
+  /**
+   * Output ID that triggers this rule. Allows chaining outputs.
+   */
+  fromOutput?: string;
   uses: string[];
   chatPromptTemplate: string;
+  /**
+   * How this rule is triggered. Defaults to "auto" if not specified.
+   */
+  triggerType?: 'auto' | 'button';
+  /**
+   * Optional label when triggerType is "button".
+   */
+  buttonLabel?: string;
 }
