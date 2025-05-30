@@ -5,8 +5,10 @@ This is a simple Next.js application that generates game content using OpenAI Ch
 ## Development
 
 1. Copy `.env.example` to `.env.local` and fill in the required keys.
-2. Install dependencies with `npm install`.
+2. Install dependencies with `npm install`, which uses the included `package-lock.json` to pin versions.
 3. Run the development server using `npm run dev`.
+
+This project recommends **Node.js 20**. Dependency versions are pinned in `package-lock.json`, so always install packages using the lockfile for reproducible builds.
 
 ### Required Environment Variables
 
