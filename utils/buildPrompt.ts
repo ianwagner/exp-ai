@@ -19,6 +19,7 @@ export function buildPrompt(
         break;
       }
     }
+    if (Array.isArray(value)) return value.join('\n');
     return value?.toString?.() ?? '';
   });
 }
