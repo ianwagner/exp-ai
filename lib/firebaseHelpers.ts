@@ -32,20 +32,20 @@ export async function getOutputRules(): Promise<OutputRule[]> {
 // Component Types -----------------------------------------------------------
 
 export async function getComponentTypes(): Promise<ComponentType[]> {
-  const snapshot = await getDocs(collection(db, 'componentTypes'));
+  const snapshot = await getDocs(collection(db, 'components'));
   return snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Omit<ComponentType, 'id'>) }));
 }
 
 export async function setComponentType(type: ComponentType): Promise<void> {
   const { id, ...data } = type;
-  await setDoc(doc(db, 'componentTypes', id), data);
+  await setDoc(doc(db, 'components', id), data);
 }
 
 export async function updateComponentTypeSchema(
   id: string,
   fields: InputField[]
 ): Promise<void> {
-  await updateDoc(doc(db, 'componentTypes', id), { fields });
+  await updateDoc(doc(db, 'components', id), { fields });
 }
 
 // Component Instances ------------------------------------------------------
