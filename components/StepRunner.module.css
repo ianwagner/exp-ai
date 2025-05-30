@@ -1,0 +1,85 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: #121212;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 0.5rem;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #ffffff;
+  text-transform: capitalize;
+}
+
+.heading {
+  font-weight: bold;
+  color: #ffffff;
+  text-transform: capitalize;
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: #212121;
+  color: #feb710;
+  border: 1px solid #feb710;
+  border-radius: 0.5rem;
+}
+
+.textarea,
+.outputTextarea {
+  min-height: 4rem;
+  resize: vertical;
+}
+
+.outputBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 0.5rem;
+}
+
+.outputTextarea {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: #212121;
+  color: #feb710;
+  border: 1px solid #feb710;
+  border-radius: 0.5rem;
+}
+
+.button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #feb710;
+  color: #feb710;
+  background-color: transparent;
+  border-radius: 9999px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.buttonHover:hover {
+  background-color: #feb710;
+  color: #121212;
+}
+
+.error {
+  color: #ff4d4f;
+}
