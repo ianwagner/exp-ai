@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   collection,
   doc,
@@ -53,6 +53,10 @@ const AdminStepsView = () => {
   >(mockComponents);
   const [outputRules, setOutputRules] = useState<OutputRule[]>(mockOutputs);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+  const [dragInput, setDragInput] = useState<{
+    step: number;
+    index: number;
+  } | null>(null);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -133,6 +137,31 @@ const AdminStepsView = () => {
       return copy;
     });
   };
+
+  const handleDragStart = (stepIdx: number, inputIdx: number) => {
+    setDragInput({ step: stepIdx, index: inputIdx });
+  };
+
+  const handleDrop = (stepIdx: number, inputIdx: number) => {
+    if (!dragInput || dragInput.step !== stepIdx) return;
+    const from = dragInput.index;
+    const to = inputIdx;
+    if (from === to) {
+      setDragInput(null);
+      return;
+    }
+    setItems((prev) => {
+      const copy = [...prev];
+      const inputs = copy[stepIdx].expectedInputs || [];
+      const [moved] = inputs.splice(from, 1);
+      inputs.splice(to, 0, moved);
+      copy[stepIdx].expectedInputs = inputs;
+      return copy;
+    });
+    setDragInput(null);
+  };
+
+  const allowDrop = (e: React.DragEvent) => e.preventDefault();
 
   const saveItem = async (item: StepItem) => {
     if (!item.id) {
@@ -258,9 +287,21 @@ const AdminStepsView = () => {
                   value={item.output}
                   onChange={(e) => handleChange(idx, 'output', e.target.value)}
                 />
-                <div className="space-y-2">
+                <div
+                  className="space-y-2"
+                  onDragOver={allowDrop}
+                  onDrop={() => handleDrop(idx, (item.expectedInputs || []).length)}
+                >
                   {(item.expectedInputs || []).map((inp, iIdx) => (
-                    <div key={iIdx} className="flex space-x-2 items-center">
+                    <div
+                      key={iIdx}
+                      className="flex space-x-2 items-center"
+                      draggable
+                      onDragStart={() => handleDragStart(idx, iIdx)}
+                      onDragOver={allowDrop}
+                      onDrop={() => handleDrop(idx, iIdx)}
+                    >
+                      <span className="cursor-move select-none">☰</span>
                       <input
                         className="form-input-light"
                         placeholder="Name"
