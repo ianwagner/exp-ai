@@ -15,6 +15,13 @@ import type {
   OutputRule,
   InputField,
 } from '../lib/types';
+import {
+  componentType,
+  componentInstance,
+  mockSteps,
+  mockOutputs,
+  mockComponents,
+} from '../data/mockFlow';
 
 const SETTINGS_PASSWORD = process.env.NEXT_PUBLIC_SETTINGS_PASSWORD;
 
@@ -35,16 +42,23 @@ const blankInput = (): InputField => ({
 });
 
 const AdminStepsView = () => {
-  const [items, setItems] = useState<StepItem[]>([]);
-  const [componentTypes, setComponentTypes] = useState<ComponentType[]>([]);
+  const [items, setItems] = useState<StepItem[]>(
+    mockSteps as StepItem[]
+  );
+  const [componentTypes, setComponentTypes] = useState<ComponentType[]>([
+    componentType,
+  ]);
   const [componentInstances, setComponentInstances] = useState<
     Record<string, ComponentInstance[]>
-  >({});
-  const [outputRules, setOutputRules] = useState<OutputRule[]>([]);
+  >(mockComponents);
+  const [outputRules, setOutputRules] = useState<OutputRule[]>(mockOutputs);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchItems = async () => {
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+        return;
+      }
       const snapshot = await getDocs(collection(db, 'steps'));
       const list: StepItem[] = [];
       snapshot.forEach((d) => {
@@ -336,10 +350,18 @@ interface ComponentInstanceItem extends ComponentInstance {
 const blankField = (): InputField => ({ name: '', label: '', type: 'text' });
 
 const AdminComponentsView = () => {
-  const [types, setTypes] = useState<ComponentTypeItem[]>([]);
+  const [types, setTypes] = useState<ComponentTypeItem[]>([
+    {
+      ...componentType,
+      instances: [componentInstance as ComponentInstanceItem],
+    } as ComponentTypeItem,
+  ]);
 
   useEffect(() => {
     const fetchTypes = async () => {
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+        return;
+      }
       const snap = await getDocs(collection(db, 'components'));
       const list: ComponentTypeItem[] = [];
       snap.forEach((d) => {
@@ -357,6 +379,14 @@ const AdminComponentsView = () => {
       setTypes((prev) => {
         const copy = [...prev];
         copy[index].expanded = !copy[index].expanded;
+        return copy;
+      });
+      return;
+    }
+    if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+      setTypes((prev) => {
+        const copy = [...prev];
+        copy[index].expanded = true;
         return copy;
       });
       return;
@@ -673,11 +703,16 @@ interface OutputItem extends OutputRule {
 }
 
 const AdminOutputsView = () => {
-  const [items, setItems] = useState<OutputItem[]>([]);
+  const [items, setItems] = useState<OutputItem[]>(
+    mockOutputs as OutputItem[]
+  );
   const [expanded, setExpanded] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchItems = async () => {
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+        return;
+      }
       const snapshot = await getDocs(collection(db, 'outputs'));
       const list: OutputItem[] = [];
       snapshot.forEach((d) => {

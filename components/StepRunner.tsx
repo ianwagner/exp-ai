@@ -10,6 +10,11 @@ import type {
   InputField,
   ComponentInstance,
 } from '../lib/types';
+import {
+  mockSteps,
+  mockOutputs,
+  mockComponents,
+} from '../data/mockFlow';
 import buildPrompt from '../utils/buildPrompt';
 
 // Basic step runner that dynamically renders form inputs for each step.
@@ -24,12 +29,12 @@ const extractInputs = (step: Step): InputField[] => {
 };
 
 const StepRunner = () => {
-  const [steps, setSteps] = useState<Step[]>([]);
-  const [outputs, setOutputs] = useState<OutputRule[]>([]);
+  const [steps, setSteps] = useState<Step[]>(mockSteps);
+  const [outputs, setOutputs] = useState<OutputRule[]>(mockOutputs);
   const [values, setValues] = useState<Record<string, string>>({});
   const [components, setComponents] = useState<
     Record<string, ComponentInstance[]>
-  >({});
+  >(mockComponents);
   const [intermediate, setIntermediate] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -39,6 +44,7 @@ const StepRunner = () => {
 
   useEffect(() => {
     const load = async () => {
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) return;
       try {
         const [s, o] = await Promise.all([getSteps(), getOutputRules()]);
         setSteps(s);
