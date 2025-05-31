@@ -16,7 +16,6 @@ import {
   mockComponents,
 } from '../data/mockFlow';
 import buildPrompt from '../utils/buildPrompt';
-import styles from './StepRunner.module.css';
 
 // Basic step runner that dynamically renders form inputs for each step.
 // TODO: refine once the step and output schemas are finalized.
@@ -244,28 +243,28 @@ const StepRunner = () => {
   };
 
   return (
-    <div className={styles.container}>
+    <div className="flex flex-col gap-6 bg-[#121212]">
       {steps.map((step) => {
         const inputs = extractInputs(step);
         return (
           <form
             key={step.id}
             onSubmit={(e) => runStep(e, step)}
-            className={styles.form}
+            className="flex flex-col gap-4 p-4 bg-[#1e1e1e] border border-[#333] rounded-lg"
           >
-            <h3 className={styles.heading}>{step.id}</h3>
+            <h3 className="text-white text-2xl font-bold mb-4">{step.id}</h3>
             {inputs.map((inp) => (
               <div key={inp.name}>
-                <label className={styles.label}>{inp.label || inp.name}</label>
+                <label className="text-white font-medium mb-1 capitalize">{inp.label || inp.name}</label>
                 {inp.type === 'textarea' ? (
                   <textarea
-                    className={styles.textarea}
+                    className="rounded-3xl px-6 py-4 bg-black border border-yellow-400 text-yellow-400 w-full min-h-16 resize-y"
                     value={values[`${step.id}:${inp.name}`] || ''}
                     onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
                   />
                 ) : inp.type === 'component' ? (
                   <select
-                    className={styles.select}
+                    className="rounded-full px-4 py-2 bg-black border border-yellow-400 text-yellow-400"
                     value={values[`${step.id}:${inp.name}`] || ''}
                     onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
                   >
@@ -279,7 +278,7 @@ const StepRunner = () => {
                 ) : (
                   <input
                     type={inp.type || 'text'}
-                    className={styles.input}
+                    className="rounded-full px-4 py-2 bg-black border border-yellow-400 text-yellow-400 w-full max-w-md"
                     value={values[`${step.id}:${inp.name}`] || ''}
                     onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
                   />
@@ -288,7 +287,7 @@ const StepRunner = () => {
             ))}
             <button
               type="submit"
-              className={`${styles.button} ${styles.buttonHover}`}
+              className="rounded-full px-6 py-2 border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition"
               disabled={loading}
             >
               {loading ? 'Generating...' : 'Generate'}
@@ -297,13 +296,13 @@ const StepRunner = () => {
         );
       })}
       {Object.entries(generated).map(([id, text]) => (
-        <div key={id} className={styles.outputBlock}>
-          <h4 className={styles.heading}>{id}</h4>
+        <div key={id} className="flex flex-col gap-2 bg-[#111] p-4 rounded-xl border border-yellow-800 mb-6">
+          <h4 className="text-white text-2xl font-bold mb-4">{id}</h4>
           {Array.isArray(text) ? (
             text.map((item, idx) => (
-              <div key={idx} className={styles.outputBlock}>
+              <div key={idx} className="flex flex-col gap-2 bg-[#111] p-4 rounded-xl border border-yellow-800 mb-6">
                 <textarea
-                  className={styles.outputTextarea}
+                  className="rounded-3xl px-6 py-4 bg-black border border-yellow-400 text-yellow-400 w-full min-h-16 resize-y"
                   value={item}
                   onChange={(e) =>
                     setGenerated((prev) => {
@@ -315,20 +314,20 @@ const StepRunner = () => {
                 />
                 {Object.entries(itemOutputs[id]?.[idx] || {}).map(
                   ([cid, val]) => (
-                    <div key={cid} className={styles.outputBlock}>
-                      <h5 className={styles.heading}>{cid}</h5>
+                    <div key={cid} className="flex flex-col gap-2 bg-[#111] p-4 rounded-xl border border-yellow-800 mb-6">
+                      <h5 className="text-white text-2xl font-bold mb-4">{cid}</h5>
                       {Array.isArray(val) ? (
                         val.map((v, vi) => (
                           <textarea
                             key={vi}
-                            className={styles.outputTextarea}
+                            className="rounded-3xl px-6 py-4 bg-black border border-yellow-400 text-yellow-400 w-full min-h-16 resize-y"
                             value={v as string}
                             readOnly
                           />
                         ))
                       ) : (
                         <textarea
-                          className={styles.outputTextarea}
+                          className="rounded-3xl px-6 py-4 bg-black border border-yellow-400 text-yellow-400 w-full min-h-16 resize-y"
                           value={val as string}
                           readOnly
                         />
@@ -344,7 +343,7 @@ const StepRunner = () => {
                     <button
                       key={`${b.rule.id}-${bIdx}`}
                       onClick={() => handleButton(pendingButtons.indexOf(b))}
-                      className={`${styles.button} ${styles.buttonHover}`}
+                      className="rounded-full px-6 py-2 border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition"
                       disabled={loading}
                     >
                       {loading ? 'Running...' : b.rule.buttonLabel || 'Run'}
@@ -355,7 +354,7 @@ const StepRunner = () => {
           ) : (
             <>
               <textarea
-                className={styles.outputTextarea}
+                className="rounded-3xl px-6 py-4 bg-black border border-yellow-400 text-yellow-400 w-full min-h-16 resize-y"
                 value={text as string}
                 onChange={(e) =>
                   setGenerated((prev) => ({ ...prev, [id]: e.target.value }))
@@ -367,7 +366,7 @@ const StepRunner = () => {
                   <button
                     key={`${b.rule.id}-${bIdx}`}
                     onClick={() => handleButton(pendingButtons.indexOf(b))}
-                    className={`${styles.button} ${styles.buttonHover}`}
+                    className="rounded-full px-6 py-2 border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition"
                     disabled={loading}
                   >
                     {loading ? 'Running...' : b.rule.buttonLabel || 'Run'}
@@ -377,7 +376,7 @@ const StepRunner = () => {
           )}
         </div>
       ))}
-      {error && <div className={styles.error}>{error}</div>}
+      {error && <div className="text-[#ff4d4f]">{error}</div>}
     </div>
   );
 };
