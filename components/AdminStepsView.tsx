@@ -318,6 +318,7 @@ const AdminStepsView = () => {
                         <option value="text">Text</option>
                         <option value="textarea">Textarea</option>
                         <option value="number">Number</option>
+                        <option value="image">Image</option>
                         <option value="component">Component</option>
                       </select>
                       {inp.type === 'component' && (

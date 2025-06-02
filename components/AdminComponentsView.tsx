@@ -7,6 +7,7 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { uploadFile } from '../lib/firebaseHelpers';
 import type {
   ComponentType,
   ComponentInstance,
@@ -151,6 +152,23 @@ const AdminComponentsView = () => {
     });
   };
 
+  const handleFileChange = async (
+    typeIndex: number,
+    instIndex: number,
+    field: string,
+    file: File
+  ) => {
+    const type = types[typeIndex];
+    const inst = type.instances?.[instIndex];
+    if (!type.id || !inst?.id) {
+      alert('Set IDs before uploading');
+      return;
+    }
+    const path = `components/${type.id}/instances/${inst.id}/${field}`;
+    const url = await uploadFile(file, path);
+    handleInstanceChange(typeIndex, instIndex, field, url);
+  };
+
   const saveType = async (type: ComponentTypeItem) => {
     if (!type.id) {
       alert('ID required');
@@ -279,6 +297,7 @@ const AdminComponentsView = () => {
                         <option value="text">Text</option>
                         <option value="textarea">Textarea</option>
                         <option value="number">Number</option>
+                        <option value="image">Image</option>
                       </select>
                       <button
                         onClick={() => removeFieldFromType(idx, fIdx)}
@@ -330,6 +349,22 @@ const AdminComponentsView = () => {
                                   handleInstanceChange(idx, iIdx, f.name, e.target.value)
                                 }
                               />
+                            ) : f.type === 'image' ? (
+                              <div className="space-y-1">
+                                {inst.values?.[f.name] && (
+                                  <img src={inst.values[f.name]} alt="" className="h-12" />
+                                )}
+                                <input
+                                  type="file"
+                                  className="form-input-light"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      handleFileChange(idx, iIdx, f.name, file);
+                                    }
+                                  }}
+                                />
+                              </div>
                             ) : (
                               <input
                                 className="form-input-light"

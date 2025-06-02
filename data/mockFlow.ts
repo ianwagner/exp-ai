@@ -6,7 +6,7 @@ export const componentType: ComponentType = {
   name: 'Experience',
   fields: [
     { name: 'name', label: 'Name', type: 'text' },
-    { name: 'icon', label: 'Icon', type: 'text' },
+    { name: 'icon', label: 'Icon', type: 'image' },
     { name: 'image', label: 'Image URL', type: 'text' },
     { name: 'description', label: 'Description', type: 'textarea' },
     { name: 'useCases', label: 'Use Cases', type: 'textarea' },

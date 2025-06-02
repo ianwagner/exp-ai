@@ -329,7 +329,11 @@ const StepRunner = () => {
                 <div key={idx} className={styles["step-output"]}>
                   {(icon || name) && (
                     <div className={styles["component-info"]}>
-                      {icon && <span className={styles["step-icon"]}>{icon}</span>}
+                      {icon && (/(^https?:)/.test(icon) ? (
+                        <img src={icon} alt="" className={styles["step-image"]} />
+                      ) : (
+                        <span className={styles["step-icon"]}>{icon}</span>
+                      ))}
                       {name && <span className={styles["step-name"]}>{name}</span>}
                       {image && (
                         <img
@@ -416,7 +420,11 @@ const StepRunner = () => {
                 return (
                   (icon || name || image) && (
                     <div className={styles["component-info"]}>
-                      {icon && <span className={styles["step-icon"]}>{icon}</span>}
+                      {icon && (/(^https?:)/.test(icon) ? (
+                        <img src={icon} alt="" className={styles["step-image"]} />
+                      ) : (
+                        <span className={styles["step-icon"]}>{icon}</span>
+                      ))}
                       {name && <span className={styles["step-name"]}>{name}</span>}
                       {image && (
                         <img
