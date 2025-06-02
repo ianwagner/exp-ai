@@ -158,23 +158,27 @@ const StepRunner = () => {
 
       for (const next of outputs.filter((o) => o.fromOutput === rule.id)) {
         if (Array.isArray(parsed)) {
-          parsed.forEach((item, idx) => {
+          for (const [idx, item] of parsed.entries()) {
             if (next.triggerType === 'button') {
               setPendingButtons((prev) => [
                 ...prev,
                 { rule: next, stepId, sourceId: rule.id, index: idx },
               ]);
             } else {
-              runOutputRule(
-                next,
-                stepId,
-                map,
-                { [next.fromOutput || rule.id]: item },
-                rule.id,
-                idx
-              );
+              try {
+                map = await runOutputRule(
+                  next,
+                  stepId,
+                  map,
+                  { [next.fromOutput || rule.id]: item },
+                  rule.id,
+                  idx
+                );
+              } catch (err: any) {
+                setError(err.message || 'Request failed');
+              }
             }
-          });
+          }
         } else {
           if (next.triggerType === 'button') {
             setPendingButtons((prev) => [
@@ -182,13 +186,17 @@ const StepRunner = () => {
               { rule: next, stepId, sourceId: rule.id },
             ]);
           } else {
-            await runOutputRule(
-              next,
-              stepId,
-              map,
-              { [next.fromOutput || rule.id]: parsed },
-              rule.id
-            );
+            try {
+              map = await runOutputRule(
+                next,
+                stepId,
+                map,
+                { [next.fromOutput || rule.id]: parsed },
+                rule.id
+              );
+            } catch (err: any) {
+              setError(err.message || 'Request failed');
+            }
           }
         }
       }
