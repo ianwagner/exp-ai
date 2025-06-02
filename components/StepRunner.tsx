@@ -247,7 +247,7 @@ const StepRunner = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 bg-[#121212]">
+    <div className="step-runner">
       {steps.map((step) => {
         const inputs = extractInputs(step);
         return (

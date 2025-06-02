@@ -75,4 +75,3 @@ body {
 .output-container {
   @apply flex flex-col gap-2 bg-[#111] p-4 rounded-xl border border-yellow-800 mb-6;
 }
-
