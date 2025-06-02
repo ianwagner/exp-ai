@@ -305,13 +305,37 @@ const StepRunner = () => {
         <div key={id} className={styles["step-output"]}>
           <h4 className={styles["step-heading"]}>{id}</h4>
           {Array.isArray(text) ? (
-            text.map((item, idx) => (
-              <div key={idx} className={styles["step-output"]}>
-                <textarea
-                  className={styles["step-textarea"]}
-                  value={item}
-                  onChange={(e) =>
-                    setGenerated((prev) => {
+            text.map((item, idx) => {
+              const stepId = outputOrigins[id];
+              let icon = '';
+              let name = '';
+              if (stepId) {
+                const s = steps.find((st) => st.id === stepId);
+                const inputs = extractInputs(s || ({} as Step));
+                inputs.forEach((inp) => {
+                  if (inp.type === 'component' && inp.componentType) {
+                    const selId = values[`${stepId}:${inp.name}`];
+                    const inst = components[inp.componentType]?.find(
+                      (c) => c.id === selId
+                    );
+                    if (inst?.values.icon) icon = inst.values.icon;
+                    if (inst?.values.name) name = inst.values.name;
+                  }
+                });
+              }
+              return (
+                <div key={idx} className={styles["step-output"]}>
+                  {(icon || name) && (
+                    <div className={styles["component-info"]}>
+                      {icon && <span className={styles["step-icon"]}>{icon}</span>}
+                      {name && <span className={styles["step-name"]}>{name}</span>}
+                    </div>
+                  )}
+                  <textarea
+                    className={styles["step-textarea"]}
+                    value={item}
+                    onChange={(e) =>
+                      setGenerated((prev) => {
                       const arr = Array.isArray(prev[id]) ? [...(prev[id] as string[])] : [];
                       arr[idx] = e.target.value;
                       return { ...prev, [id]: arr };
@@ -354,11 +378,39 @@ const StepRunner = () => {
                     >
                       {loading ? 'Running...' : b.rule.buttonLabel || 'Run'}
                     </button>
-                  ))}
-              </div>
-            ))
+                    ))}
+                </div>
+              );
+            })
           ) : (
             <>
+              {(() => {
+                const stepId = outputOrigins[id];
+                let icon = '';
+                let name = '';
+                if (stepId) {
+                  const s = steps.find((st) => st.id === stepId);
+                  const inputs = extractInputs(s || ({} as Step));
+                  inputs.forEach((inp) => {
+                    if (inp.type === 'component' && inp.componentType) {
+                      const selId = values[`${stepId}:${inp.name}`];
+                      const inst = components[inp.componentType]?.find(
+                        (c) => c.id === selId
+                      );
+                      if (inst?.values.icon) icon = inst.values.icon;
+                      if (inst?.values.name) name = inst.values.name;
+                    }
+                  });
+                }
+                return (
+                  (icon || name) && (
+                    <div className={styles["component-info"]}>
+                      {icon && <span className={styles["step-icon"]}>{icon}</span>}
+                      {name && <span className={styles["step-name"]}>{name}</span>}
+                    </div>
+                  )
+                );
+              })()}
               <textarea
                 className={styles["step-textarea"]}
                 value={text as string}
