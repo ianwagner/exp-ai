@@ -1,5 +1,5 @@
 .step-form {
-  @apply flex flex-col gap-4 p-4 bg-[#1e1e1e] border border-[#333] rounded-lg;
+  @apply flex flex-col gap-4 p-4 bg-[#212121] border border-[#333] rounded-lg;
 }
 
 .step-label {
