@@ -41,3 +41,7 @@
 .step-name {
   @apply text-yellow-400 font-bold;
 }
+
+.step-image {
+  @apply w-12 h-12 object-cover rounded;
+}

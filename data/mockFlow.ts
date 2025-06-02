@@ -7,6 +7,7 @@ export const componentType: ComponentType = {
   fields: [
     { name: 'name', label: 'Name', type: 'text' },
     { name: 'icon', label: 'Icon', type: 'text' },
+    { name: 'image', label: 'Image URL', type: 'text' },
     { name: 'description', label: 'Description', type: 'textarea' },
     { name: 'useCases', label: 'Use Cases', type: 'textarea' },
     { name: 'mechanics', label: 'Mechanics', type: 'textarea' },
@@ -20,6 +21,7 @@ export const componentInstance: ComponentInstance = {
   values: {
     name: 'MyTrivia',
     icon: '🎮',
+    image: '',
     description:
       'A fast-paced quiz game where users answer themed questions under time pressure.',
     useCases: 'Classroom warmups, social game nights, team-building events',
