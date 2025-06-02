@@ -5,7 +5,8 @@ import {
   updateDoc,
   doc,
 } from 'firebase/firestore';
-import db from './firebase';
+import db, { storage } from './firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type {
   Step,
   ComponentInstance,
@@ -13,6 +14,12 @@ import type {
   ComponentType,
   InputField,
 } from './types';
+
+export async function uploadFile(file: File, path: string): Promise<string> {
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  return await getDownloadURL(storageRef);
+}
 
 export async function getSteps(): Promise<Step[]> {
   const snapshot = await getDocs(collection(db, 'steps'));
