@@ -252,19 +252,19 @@ const StepRunner = () => {
             onSubmit={(e) => runStep(e, step)}
             className="step-form"
           >
-            <h3 className="text-white text-2xl font-bold mb-4">{step.id}</h3>
+            <h3 className="step-heading">{step.id}</h3>
             {inputs.map((inp) => (
               <div key={inp.name}>
-                <label className="text-white font-medium mb-1 capitalize">{inp.label || inp.name}</label>
+                <label className="step-label capitalize">{inp.label || inp.name}</label>
                 {inp.type === 'textarea' ? (
                   <textarea
-                    className="textarea-field-dark"
+                    className="step-textarea"
                     value={values[`${step.id}:${inp.name}`] || ''}
                     onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
                   />
                 ) : inp.type === 'component' ? (
                   <select
-                    className="select-field-dark"
+                    className="step-select"
                     value={values[`${step.id}:${inp.name}`] || ''}
                     onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
                   >
@@ -278,7 +278,7 @@ const StepRunner = () => {
                 ) : (
                   <input
                     type={inp.type || 'text'}
-                    className="input-field-dark"
+                    className="step-input"
                     value={values[`${step.id}:${inp.name}`] || ''}
                     onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
                   />
@@ -287,7 +287,7 @@ const StepRunner = () => {
             ))}
             <button
               type="submit"
-              className="btn-border-yellow"
+              className="step-button"
               disabled={loading}
             >
               {loading ? 'Generating...' : 'Generate'}
@@ -296,13 +296,13 @@ const StepRunner = () => {
         );
       })}
       {Object.entries(generated).map(([id, text]) => (
-        <div key={id} className="output-container">
-          <h4 className="text-white text-2xl font-bold mb-4">{id}</h4>
+        <div key={id} className="step-output">
+          <h4 className="step-heading">{id}</h4>
           {Array.isArray(text) ? (
             text.map((item, idx) => (
-              <div key={idx} className="output-container">
+              <div key={idx} className="step-output">
                 <textarea
-                  className="textarea-field-dark"
+                  className="step-textarea"
                   value={item}
                   onChange={(e) =>
                     setGenerated((prev) => {
@@ -314,20 +314,20 @@ const StepRunner = () => {
                 />
                 {Object.entries(itemOutputs[id]?.[idx] || {}).map(
                   ([cid, val]) => (
-                    <div key={cid} className="output-container">
-                      <h5 className="text-white text-2xl font-bold mb-4">{cid}</h5>
+                    <div key={cid} className="step-output">
+                      <h5 className="step-heading">{cid}</h5>
                       {Array.isArray(val) ? (
                         val.map((v, vi) => (
                           <textarea
                             key={vi}
-                            className="textarea-field-dark"
+                            className="step-textarea"
                             value={v as string}
                             readOnly
                           />
                         ))
                       ) : (
                         <textarea
-                          className="textarea-field-dark"
+                          className="step-textarea"
                           value={val as string}
                           readOnly
                         />
@@ -343,7 +343,7 @@ const StepRunner = () => {
                     <button
                       key={`${b.rule.id}-${bIdx}`}
                       onClick={() => handleButton(pendingButtons.indexOf(b))}
-                      className="btn-border-yellow"
+                      className="step-button"
                       disabled={loading}
                     >
                       {loading ? 'Running...' : b.rule.buttonLabel || 'Run'}
@@ -354,7 +354,7 @@ const StepRunner = () => {
           ) : (
             <>
               <textarea
-                className="textarea-field-dark"
+                className="step-textarea"
                 value={text as string}
                 onChange={(e) =>
                   setGenerated((prev) => ({ ...prev, [id]: e.target.value }))
@@ -366,7 +366,7 @@ const StepRunner = () => {
                   <button
                     key={`${b.rule.id}-${bIdx}`}
                     onClick={() => handleButton(pendingButtons.indexOf(b))}
-                    className="btn-border-yellow"
+                    className="step-button"
                     disabled={loading}
                   >
                     {loading ? 'Running...' : b.rule.buttonLabel || 'Run'}

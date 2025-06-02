@@ -78,3 +78,32 @@ body {
 .output-container {
   @apply flex flex-col gap-2 bg-[#111] p-4 rounded-xl border border-yellow-800 mb-6;
 }
+
+/* New semantic classes for StepRunner */
+.step-label {
+  @apply text-white font-medium mb-1;
+}
+
+.step-input {
+  @apply rounded-full px-4 py-2 bg-black border border-yellow-400 text-yellow-400 w-full max-w-md;
+}
+
+.step-textarea {
+  @apply rounded-3xl px-6 py-4 bg-black border border-yellow-400 text-yellow-400 w-full;
+}
+
+.step-select {
+  @apply rounded-full px-4 py-2 bg-black border border-yellow-400 text-yellow-400;
+}
+
+.step-heading {
+  @apply text-white text-2xl font-bold mb-4;
+}
+
+.step-output {
+  @apply bg-[#111] p-4 rounded-xl border border-yellow-800 mb-6;
+}
+
+.step-button {
+  @apply rounded-full px-6 py-2 border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition;
+}
