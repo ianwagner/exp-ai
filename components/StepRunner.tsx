@@ -18,14 +18,9 @@ import {
 import buildPrompt from '../utils/buildPrompt';
 
 // Basic step runner that dynamically renders form inputs for each step.
-// TODO: refine once the step and output schemas are finalized.
 
 const extractInputs = (step: Step): InputField[] => {
-  const list = step.expectedInputs as any[] | undefined;
-  if (!Array.isArray(list)) return [];
-  return list.map((item) =>
-    typeof item === 'string' ? { name: item } : (item as InputField)
-  );
+  return Array.isArray(step.expectedInputs) ? step.expectedInputs : [];
 };
 
 const StepRunner = () => {
