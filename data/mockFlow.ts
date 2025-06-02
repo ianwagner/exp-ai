@@ -6,6 +6,7 @@ export const componentType: ComponentType = {
   name: 'Experience',
   fields: [
     { name: 'name', label: 'Name', type: 'text' },
+    { name: 'icon', label: 'Icon', type: 'text' },
     { name: 'description', label: 'Description', type: 'textarea' },
     { name: 'useCases', label: 'Use Cases', type: 'textarea' },
     { name: 'mechanics', label: 'Mechanics', type: 'textarea' },
@@ -18,6 +19,7 @@ export const componentInstance: ComponentInstance = {
   componentType: 'experience',
   values: {
     name: 'MyTrivia',
+    icon: '🎮',
     description:
       'A fast-paced quiz game where users answer themed questions under time pressure.',
     useCases: 'Classroom warmups, social game nights, team-building events',
@@ -55,6 +57,8 @@ export const descriptionOutput: OutputRule = {
     'experienceType.description',
     'experienceType.useCases',
     'experienceType.mechanics',
+    'experienceType.icon',
+    'experienceType.name',
   ],
   chatPromptTemplate: `
 Generate {{numDescriptions}} unique game experiences based on this theme:
@@ -63,7 +67,7 @@ Generate {{numDescriptions}} unique game experiences based on this theme:
 Use cases: {{experienceType.useCases}}
 Mechanics: {{experienceType.mechanics}}
 
-Output each experience as a 1–2 sentence description in a numbered list.
+Prefix each result with the icon {{experienceType.icon}} and include the name {{experienceType.name}}. Output each experience as a 1–2 sentence description in a numbered list.
   `.trim(),
 };
 
@@ -74,7 +78,12 @@ export const gameBuildOutput: OutputRule = {
   fromOutput: 'description',
   triggerType: 'button',
   buttonLabel: 'Create Game',
-  uses: ['description', 'experienceType.mechanics'],
+  uses: [
+    'description',
+    'experienceType.mechanics',
+    'experienceType.icon',
+    'experienceType.name',
+  ],
   chatPromptTemplate: `
 Take this experience description and generate a fully playable trivia game.
 
@@ -85,7 +94,7 @@ Mechanics to apply:
 {{experienceType.mechanics}}
 
 Output format:
-- Game title
+- Game title (prefixed with {{experienceType.icon}} and the name {{experienceType.name}})
 - Setup instructions
 - 5 sample trivia questions with answers
 - Scoring logic
