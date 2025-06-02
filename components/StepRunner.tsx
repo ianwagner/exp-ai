@@ -309,6 +309,7 @@ const StepRunner = () => {
               const stepId = outputOrigins[id];
               let icon = '';
               let name = '';
+              let image = '';
               if (stepId) {
                 const s = steps.find((st) => st.id === stepId);
                 const inputs = extractInputs(s || ({} as Step));
@@ -320,6 +321,7 @@ const StepRunner = () => {
                     );
                     if (inst?.values.icon) icon = inst.values.icon;
                     if (inst?.values.name) name = inst.values.name;
+                    if (inst?.values.image) image = inst.values.image;
                   }
                 });
               }
@@ -329,6 +331,13 @@ const StepRunner = () => {
                     <div className={styles["component-info"]}>
                       {icon && <span className={styles["step-icon"]}>{icon}</span>}
                       {name && <span className={styles["step-name"]}>{name}</span>}
+                      {image && (
+                        <img
+                          src={image}
+                          alt=""
+                          className={styles["step-image"]}
+                        />
+                      )}
                     </div>
                   )}
                   <textarea
@@ -388,6 +397,7 @@ const StepRunner = () => {
                 const stepId = outputOrigins[id];
                 let icon = '';
                 let name = '';
+                let image = '';
                 if (stepId) {
                   const s = steps.find((st) => st.id === stepId);
                   const inputs = extractInputs(s || ({} as Step));
@@ -399,14 +409,22 @@ const StepRunner = () => {
                       );
                       if (inst?.values.icon) icon = inst.values.icon;
                       if (inst?.values.name) name = inst.values.name;
+                      if (inst?.values.image) image = inst.values.image;
                     }
                   });
                 }
                 return (
-                  (icon || name) && (
+                  (icon || name || image) && (
                     <div className={styles["component-info"]}>
                       {icon && <span className={styles["step-icon"]}>{icon}</span>}
                       {name && <span className={styles["step-name"]}>{name}</span>}
+                      {image && (
+                        <img
+                          src={image}
+                          alt=""
+                          className={styles["step-image"]}
+                        />
+                      )}
                     </div>
                   )
                 );
