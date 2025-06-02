@@ -107,3 +107,8 @@ body {
 .step-button {
   @apply rounded-full px-6 py-2 border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition;
 }
+
+/* Container class for the StepRunner component */
+.step-runner {
+  @apply flex flex-col gap-6 bg-[#121212];
+}
