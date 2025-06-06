@@ -1,5 +1,5 @@
 .step-form {
-  @apply flex flex-col gap-4 p-4 bg-[#212121] border border-[#333] rounded-lg;
+  @apply flex flex-col gap-4 p-4 bg-[#212121] border border-[#393939] rounded-lg;
 }
 
 .step-label {
@@ -7,15 +7,15 @@
 }
 
 .step-input {
-  @apply rounded-full px-4 py-2 bg-black border border-yellow-400 text-yellow-400 w-full max-w-md;
+  @apply rounded-full px-4 py-2 bg-black border border-[#feb710] text-[#feb710] w-full max-w-md;
 }
 
 .step-textarea {
-  @apply rounded-3xl px-6 py-4 bg-black border border-yellow-400 text-yellow-400 w-full;
+  @apply rounded-3xl px-6 py-4 bg-black border border-[#feb710] text-[#feb710] w-full;
 }
 
 .step-select {
-  @apply rounded-full px-4 py-2 bg-black border border-yellow-400 text-yellow-400;
+  @apply rounded-full px-4 py-2 bg-black border border-[#feb710] text-[#feb710];
 }
 
 .step-heading {
@@ -23,11 +23,11 @@
 }
 
 .step-output {
-  @apply bg-[#111] p-4 rounded-xl border border-yellow-800 mb-6;
+  @apply bg-[#212121] p-4 rounded-xl border border-[#feb710] mb-6;
 }
 
 .step-button {
-  @apply rounded-full px-6 py-2 border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition;
+  @apply rounded-full px-6 py-2 border border-[#feb710] text-[#feb710] hover:bg-[#feb710] hover:text-black transition;
 }
 
 .component-info {
@@ -39,7 +39,7 @@
 }
 
 .step-name {
-  @apply text-yellow-400 font-bold;
+  @apply text-[#feb710] font-bold;
 }
 
 .step-image {
