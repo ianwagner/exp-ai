@@ -48,11 +48,41 @@ const AdminMakerTypesView = () => {
     });
   };
 
-  const handleStepsChange = (idx: number, opts: HTMLOptionsCollection) => {
-    const vals = Array.from(opts)
-      .filter((o) => o.selected)
-      .map((o) => o.value);
-    handleChange(idx, 'steps', vals);
+  const [newSteps, setNewSteps] = useState<Record<number, string>>({});
+
+  const addStepToMakerType = (idx: number) => {
+    const stepId = newSteps[idx];
+    if (!stepId) return;
+    setMakerTypes((prev) => {
+      const copy = [...prev];
+      const list = copy[idx].steps || [];
+      if (!list.includes(stepId)) {
+        copy[idx].steps = [...list, stepId];
+      }
+      return copy;
+    });
+    setNewSteps((prev) => ({ ...prev, [idx]: '' }));
+  };
+
+  const removeStep = (mtIdx: number, stepIdx: number) => {
+    setMakerTypes((prev) => {
+      const copy = [...prev];
+      copy[mtIdx].steps = copy[mtIdx].steps.filter((_, i) => i !== stepIdx);
+      return copy;
+    });
+  };
+
+  const moveStep = (mtIdx: number, stepIdx: number, dir: number) => {
+    setMakerTypes((prev) => {
+      const copy = [...prev];
+      const arr = [...copy[mtIdx].steps];
+      const newIdx = stepIdx + dir;
+      if (newIdx < 0 || newIdx >= arr.length) return copy;
+      const [item] = arr.splice(stepIdx, 1);
+      arr.splice(newIdx, 0, item);
+      copy[mtIdx].steps = arr;
+      return copy;
+    });
   };
 
   const saveMakerType = async (mt: MakerTypeItem) => {
@@ -98,18 +128,36 @@ const AdminMakerTypesView = () => {
                 value={mt.name}
                 onChange={(e) => handleChange(idx, 'name', e.target.value)}
               />
-              <select
-                multiple
-                className="form-input-light h-32"
-                value={mt.steps}
-                onChange={(e) => handleStepsChange(idx, e.target.options)}
-              >
-                {steps.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+              <ul className="space-y-1">
+                {mt.steps.map((sid, sIdx) => {
+                  const step = steps.find((s) => s.id === sid);
+                  return (
+                    <li key={sIdx} className="flex space-x-2 items-center">
+                      <span className="flex-1">{step?.name || sid}</span>
+                      <button onClick={() => moveStep(idx, sIdx, -1)} className="btn btn-blue">↑</button>
+                      <button onClick={() => moveStep(idx, sIdx, 1)} className="btn btn-blue">↓</button>
+                      <button onClick={() => removeStep(idx, sIdx)} className="btn btn-danger">X</button>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="flex space-x-2 items-center mt-2">
+                <select
+                  className="form-input-light flex-1"
+                  value={newSteps[idx] || ''}
+                  onChange={(e) => setNewSteps((p) => ({ ...p, [idx]: e.target.value }))}
+                >
+                  <option value="">Select step...</option>
+                  {steps
+                    .filter((s) => !mt.steps.includes(s.id))
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                </select>
+                <button onClick={() => addStepToMakerType(idx)} className="btn btn-blue">Add</button>
+              </div>
               <div className="flex space-x-2">
                 <button onClick={() => saveMakerType(mt)} className="btn btn-success">
                   Save

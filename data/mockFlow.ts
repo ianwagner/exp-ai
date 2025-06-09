@@ -40,8 +40,7 @@ export const stepIntro: Step = {
     { name: 'numDescriptions', label: 'How many?', type: 'number' },
     { name: 'experienceType', label: 'Experience', type: 'component', componentType: 'experience' },
   ],
-  next: 'description',
-};
+}; 
 
 export const stepDescription: Step = {
   id: 'description',
@@ -56,8 +55,7 @@ Mechanics: {{experienceType.mechanics}}
 Prefix each result with the icon {{experienceType.icon}} and include the name {{experienceType.name}}. Output each experience as a 1–2 sentence description in a numbered list.`,
   outputName: 'description',
   isBranching: true,
-  next: 'gamesBuild',
-};
+}; 
 
 export const stepGamesBuild: Step = {
   id: 'gamesBuild',
@@ -77,8 +75,7 @@ Output format:
 - 5 sample trivia questions with answers
 - Scoring logic`,
   outputName: 'gamesBuild',
-  next: null,
-};
+}; 
 
 export const mockSteps = [stepIntro, stepDescription, stepGamesBuild];
 export const mockComponents: Record<string, ComponentInstance[]> = {

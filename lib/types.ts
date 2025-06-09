@@ -12,7 +12,6 @@ export interface Step {
   text?: string;
   template?: string;
   expectedInputs?: InputField[];
-  next?: string | null;
   /** Optional name for the output of this step. Defaults to the step id */
   outputName?: string;
   /** Whether the result should be treated as branching */
