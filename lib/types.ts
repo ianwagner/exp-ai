@@ -8,9 +8,11 @@ export interface InputField {
 export interface Step {
   id: string;
   name: string;
-  text: string;
+  stepType: 'form' | 'prompt';
+  text?: string;
+  template?: string;
   expectedInputs?: InputField[];
-  output: string;
+  next?: string | null;
 }
 
 export interface ComponentType {
@@ -23,32 +25,4 @@ export interface ComponentInstance {
   id: string;
   componentType: string;
   values: Record<string, any>;
-}
-
-export interface OutputRule {
-  id: string;
-  outputName: string;
-  /**
-   * Step ID that triggers this rule. Mutually exclusive with `fromOutput`.
-   */
-  fromStep?: string;
-  /**
-   * Output ID that triggers this rule. Allows chaining outputs.
-   */
-  fromOutput?: string;
-  uses: string[];
-  chatPromptTemplate: string;
-  /**
-   * How this rule is triggered. Defaults to "auto" if not specified.
-   */
-  triggerType?: 'auto' | 'button';
-  /**
-   * Optional label when triggerType is "button".
-   */
-  buttonLabel?: string;
-  /**
-   * Whether this output should be treated as branching into multiple items.
-   * If false or omitted, the result is handled as a single block.
-   */
-  isBranching?: boolean;
 }

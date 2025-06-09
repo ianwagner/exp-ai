@@ -1,4 +1,4 @@
-import type { ComponentType, ComponentInstance, Step, OutputRule } from '../lib/types';
+import type { ComponentType, ComponentInstance, Step } from '../lib/types';
 
 // --- COMPONENT TYPE ---
 export const componentType: ComponentType = {
@@ -30,64 +30,38 @@ export const componentInstance: ComponentInstance = {
   },
 };
 
-// --- STEP: Ask for number of games + experience type ---
-export const step: Step = {
+// --- STEPS ---
+export const stepIntro: Step = {
   id: 'intro',
   name: 'Intro',
+  stepType: 'form',
   text: 'How many games do you want to create? And what experience type?',
   expectedInputs: [
     { name: 'numDescriptions', label: 'How many?', type: 'number' },
-    {
-      name: 'experienceType',
-      label: 'Experience',
-      type: 'component',
-      componentType: 'experience',
-    },
+    { name: 'experienceType', label: 'Experience', type: 'component', componentType: 'experience' },
   ],
-  output: 'description',
+  next: 'description',
 };
 
-// --- OUTPUT RULE 1: Description Generator ---
-export const descriptionOutput: OutputRule = {
+export const stepDescription: Step = {
   id: 'description',
-  outputName: 'description',
-  fromStep: 'intro',
-  isBranching: true,
-  triggerType: 'auto',
-  uses: [
-    'numDescriptions',
-    'experienceType.description',
-    'experienceType.useCases',
-    'experienceType.mechanics',
-    'experienceType.icon',
-    'experienceType.name',
-  ],
-  chatPromptTemplate: `
-Generate {{numDescriptions}} unique game experiences based on this theme:
+  name: 'Generate Descriptions',
+  stepType: 'prompt',
+  template: `Generate {{numDescriptions}} unique game experiences based on this theme:
 {{experienceType.description}}
 
 Use cases: {{experienceType.useCases}}
 Mechanics: {{experienceType.mechanics}}
 
-Prefix each result with the icon {{experienceType.icon}} and include the name {{experienceType.name}}. Output each experience as a 1–2 sentence description in a numbered list.
-  `.trim(),
+Prefix each result with the icon {{experienceType.icon}} and include the name {{experienceType.name}}. Output each experience as a 1–2 sentence description in a numbered list.`,
+  next: 'gamesBuild',
 };
 
-// --- OUTPUT RULE 2: Game Builder ---
-export const gameBuildOutput: OutputRule = {
+export const stepGamesBuild: Step = {
   id: 'gamesBuild',
-  outputName: 'gamesBuild',
-  fromOutput: 'description',
-  triggerType: 'button',
-  buttonLabel: 'Create Game',
-  uses: [
-    'description',
-    'experienceType.mechanics',
-    'experienceType.icon',
-    'experienceType.name',
-  ],
-  chatPromptTemplate: `
-Take this experience description and generate a fully playable trivia game.
+  name: 'Create Game',
+  stepType: 'prompt',
+  template: `Take this experience description and generate a fully playable trivia game.
 
 Description:
 {{description}}
@@ -99,12 +73,11 @@ Output format:
 - Game title (prefixed with {{experienceType.icon}} and the name {{experienceType.name}})
 - Setup instructions
 - 5 sample trivia questions with answers
-- Scoring logic
-  `.trim(),
+- Scoring logic`,
+  next: null,
 };
 
-export const mockSteps = [step];
-export const mockOutputs = [descriptionOutput, gameBuildOutput];
+export const mockSteps = [stepIntro, stepDescription, stepGamesBuild];
 export const mockComponents: Record<string, ComponentInstance[]> = {
   experience: [componentInstance],
 };
