@@ -80,6 +80,38 @@ const AdminStepsView = () => {
     });
   };
 
+  const handleUseChange = (
+    stepIdx: number,
+    useIdx: number,
+    value: string
+  ) => {
+    setSteps((prev) => {
+      const copy = [...prev];
+      const uses = copy[stepIdx].uses || [];
+      uses[useIdx] = value;
+      copy[stepIdx].uses = uses;
+      return copy;
+    });
+  };
+
+  const addUse = (stepIdx: number) => {
+    setSteps((prev) => {
+      const copy = [...prev];
+      const uses = copy[stepIdx].uses || [];
+      copy[stepIdx].uses = [...uses, ''];
+      return copy;
+    });
+  };
+
+  const removeUse = (stepIdx: number, useIdx: number) => {
+    setSteps((prev) => {
+      const copy = [...prev];
+      const uses = copy[stepIdx].uses || [];
+      copy[stepIdx].uses = uses.filter((_, i) => i !== useIdx);
+      return copy;
+    });
+  };
+
   const saveStep = async (item: StepItem) => {
     if (!item.id) { alert('ID required'); return; }
     const { id, isNew, ...data } = item;
@@ -94,7 +126,21 @@ const AdminStepsView = () => {
   };
 
   const addStep = () => {
-    setSteps((prev) => [...prev, { id: '', name: '', stepType: 'form', expectedInputs: [], isNew: true }]);
+    setSteps((prev) => [
+      ...prev,
+      {
+        id: '',
+        name: '',
+        stepType: 'form',
+        expectedInputs: [],
+        outputName: '',
+        triggerType: 'auto',
+        buttonLabel: '',
+        uses: [],
+        isBranching: false,
+        isNew: true,
+      },
+    ]);
   };
 
   return (
@@ -150,6 +196,54 @@ const AdminStepsView = () => {
                   value={step.next || ''}
                   onChange={(e) => handleChange(idx, 'next', e.target.value)}
                 />
+                <input
+                  className="form-input-light"
+                  placeholder="Output Name"
+                  value={step.outputName || ''}
+                  onChange={(e) => handleChange(idx, 'outputName', e.target.value)}
+                />
+                <select
+                  className="form-input-light"
+                  value={step.triggerType || 'auto'}
+                  onChange={(e) => handleChange(idx, 'triggerType', e.target.value)}
+                >
+                  <option value="auto">Auto</option>
+                  <option value="button">Button</option>
+                </select>
+                {step.triggerType === 'button' && (
+                  <input
+                    className="form-input-light"
+                    placeholder="Button Label"
+                    value={step.buttonLabel || ''}
+                    onChange={(e) => handleChange(idx, 'buttonLabel', e.target.value)}
+                  />
+                )}
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={step.isBranching || false}
+                    onChange={(e) => handleChange(idx, 'isBranching', e.target.checked)}
+                  />
+                  <span>Branching Output</span>
+                </label>
+                <div className="space-y-2">
+                  {(step.uses || []).map((u, uIdx) => (
+                    <div key={uIdx} className="flex space-x-2 items-center">
+                      <input
+                        className="form-input-light"
+                        placeholder="Uses"
+                        value={u}
+                        onChange={(e) => handleUseChange(idx, uIdx, e.target.value)}
+                      />
+                      <button onClick={() => removeUse(idx, uIdx)} className="btn btn-danger">
+                        X
+                      </button>
+                    </div>
+                  ))}
+                  <button onClick={() => addUse(idx)} className="btn btn-blue">
+                    Add Use
+                  </button>
+                </div>
                 <div className="space-y-2">
                   {(step.expectedInputs || []).map((inp, iIdx) => (
                     <div key={iIdx} className="flex space-x-2 items-center">

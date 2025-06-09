@@ -13,6 +13,16 @@ export interface Step {
   template?: string;
   expectedInputs?: InputField[];
   next?: string | null;
+  /** Optional name for the output of this step. Defaults to the step id */
+  outputName?: string;
+  /** Whether the result should be treated as branching */
+  isBranching?: boolean;
+  /** How this step is triggered. Defaults to 'auto'. */
+  triggerType?: 'auto' | 'button';
+  /** Optional button label when triggerType is 'button' */
+  buttonLabel?: string;
+  /** Placeholder keys used within the template */
+  uses?: string[];
 }
 
 export interface ComponentType {
