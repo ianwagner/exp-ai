@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import AdminStepsView from './AdminStepsView';
+import AdminMakerTypesView from './AdminMakerTypesView';
 import AdminComponentsView from './AdminComponentsView';
-import AdminOutputsView from './AdminOutputsView';
+import AdminInstancesView from './AdminInstancesView';
 
 const SETTINGS_PASSWORD = process.env.NEXT_PUBLIC_SETTINGS_PASSWORD;
 
-type Tab = 'steps' | 'components' | 'outputs';
+type Tab = 'makers' | 'components' | 'instances';
 
 const AdminPanel = () => {
-  const [tab, setTab] = useState<Tab>('steps');
+  const [tab, setTab] = useState<Tab>('makers');
   const [editMode, setEditMode] = useState(false);
 
   const requestEdit = () => {
@@ -31,10 +31,10 @@ const AdminPanel = () => {
         <div>
           <div className="flex space-x-2 mb-4">
             <button
-              className={`btn ${tab === 'steps' ? 'btn-primary' : 'btn-neutral'}`}
-              onClick={() => setTab('steps')}
+              className={`btn ${tab === 'makers' ? 'btn-primary' : 'btn-neutral'}`}
+              onClick={() => setTab('makers')}
             >
-              Steps
+              Maker Types
             </button>
             <button
               className={`btn ${tab === 'components' ? 'btn-primary' : 'btn-neutral'}`}
@@ -43,15 +43,15 @@ const AdminPanel = () => {
               Components
             </button>
             <button
-              className={`btn ${tab === 'outputs' ? 'btn-primary' : 'btn-neutral'}`}
-              onClick={() => setTab('outputs')}
+              className={`btn ${tab === 'instances' ? 'btn-primary' : 'btn-neutral'}`}
+              onClick={() => setTab('instances')}
             >
-              Outputs
+              Instances
             </button>
           </div>
-          {tab === 'steps' && <AdminStepsView />}
+          {tab === 'makers' && <AdminMakerTypesView />}
           {tab === 'components' && <AdminComponentsView />}
-          {tab === 'outputs' && <AdminOutputsView />}
+          {tab === 'instances' && <AdminInstancesView />}
         </div>
       )}
     </div>
@@ -59,4 +59,4 @@ const AdminPanel = () => {
 };
 
 export default AdminPanel;
-export { AdminStepsView, AdminComponentsView, AdminOutputsView };
+export { AdminMakerTypesView, AdminComponentsView, AdminInstancesView };
