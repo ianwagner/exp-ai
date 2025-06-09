@@ -17,7 +17,7 @@ body {
 }
 
 .form-input-light {
-  @apply w-full p-1 text-white rounded-md bg-[#191919];
+  @apply w-full p-1 text-white rounded-md bg-[#393939];
 }
 
 /* Buttons */
