@@ -17,6 +17,14 @@ import styles from './ExperienceMaker.module.css';
 const extractInputs = (step: Step): InputField[] =>
   Array.isArray(step.expectedInputs) ? step.expectedInputs : [];
 
+interface Branch {
+  id: string;
+  stepIndex: number;
+  context: Record<string, any>;
+  inputs: Record<string, string>;
+  lastOutput?: string | string[];
+}
+
 const ExperienceMaker = () => {
   const [makerTypes, setMakerTypes] = useState<MakerType[]>(mockMakerTypes);
   const [makerTypeId, setMakerTypeId] = useState<string>(
@@ -24,10 +32,16 @@ const ExperienceMaker = () => {
   );
   const [allSteps, setAllSteps] = useState<Step[]>(mockSteps);
   const [steps, setSteps] = useState<Step[]>(mockSteps);
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [components, setComponents] = useState<Record<string, ComponentInstance[]>>(mockComponents);
-  const [outputs, setOutputs] = useState<Record<string, string | string[]>>({});
-  const [loading, setLoading] = useState(false);
+  const [components, setComponents] = useState<Record<string, ComponentInstance[]>>(
+    mockComponents
+  );
+  const [branches, setBranches] = useState<Branch[]>([{
+    id: 'b0',
+    stepIndex: 0,
+    context: {},
+    inputs: {},
+  }]);
+  const [loadingBranch, setLoadingBranch] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -54,8 +68,9 @@ const ExperienceMaker = () => {
     if (!mt) return;
     const selected = mt.steps
       .map((id) => allSteps.find((s) => s.id === id))
-      .filter((Boolean)) as Step[];
+      .filter(Boolean) as Step[];
     setSteps(selected);
+    setBranches([{ id: 'b0', stepIndex: 0, context: {}, inputs: {} }]);
 
     const compTypes = new Set<string>();
     selected.forEach((step) => {
@@ -78,33 +93,25 @@ const ExperienceMaker = () => {
     })();
   }, [makerTypeId, makerTypes, allSteps]);
 
-  const handleChange = (stepId: string, name: string, val: string) => {
-    setValues((prev) => ({ ...prev, [`${stepId}:${name}`]: val }));
-  };
-
-  const buildPromptForStep = (step: Step): string => {
-    const template = step.template || '';
-    const context: Record<string, any> = {};
-    steps.forEach((s) => {
-      extractInputs(s).forEach((inp) => {
-        const key = inp.name;
-        const val = values[`${s.id}:${key}`] || '';
-        if (inp.type === 'component' && inp.componentType) {
-          const inst = components[inp.componentType]?.find((c) => c.id === val);
-          context[key] = inst ? inst.values : {};
-        } else {
-          context[key] = val;
-        }
-      });
+  const handleInputChange = (
+    branchId: string,
+    name: string,
+    value: string
+  ) => {
+    setBranches((prev) => {
+      const copy = prev.map((b) =>
+        b.id === branchId ? { ...b, inputs: { ...b.inputs, [name]: value } } : b
+      );
+      return copy;
     });
-    Object.assign(context, outputs);
-    return buildPrompt(template, context);
   };
 
-  const parseResult = (
-    text: string,
-    branching?: boolean
-  ): string | string[] => {
+  const buildPromptForBranch = (branch: Branch, step: Step): string => {
+    const template = step.template || '';
+    return buildPrompt(template, branch.context);
+  };
+
+  const parseResult = (text: string, branching?: boolean): string | string[] => {
     if (branching) {
       try {
         const parsed = JSON.parse(text);
@@ -119,10 +126,31 @@ const ExperienceMaker = () => {
     return text;
   };
 
-  const runPromptStep = async (step: Step) => {
-    const prompt = buildPromptForStep(step);
+  const handleFormSubmit = (branch: Branch, step: Step) => {
+    const inputs = extractInputs(step);
+    const updates: Record<string, any> = {};
+    inputs.forEach((inp) => {
+      const val = branch.inputs[inp.name] || '';
+      if (inp.type === 'component' && inp.componentType) {
+        const inst = components[inp.componentType]?.find((c) => c.id === val);
+        updates[inp.name] = inst ? inst.values : {};
+      } else {
+        updates[inp.name] = val;
+      }
+    });
+    setBranches((prev) =>
+      prev.map((b) =>
+        b.id === branch.id
+          ? { ...b, stepIndex: b.stepIndex + 1, inputs: {}, context: { ...b.context, ...updates } }
+          : b
+      )
+    );
+  };
+
+  const runPromptStep = async (branch: Branch, step: Step) => {
+    const prompt = buildPromptForBranch(branch, step);
     if (!prompt) return;
-    setLoading(true);
+    setLoadingBranch(branch.id);
     setError('');
     try {
       const res = await fetch('/api/chat', {
@@ -133,21 +161,45 @@ const ExperienceMaker = () => {
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error || 'Failed to generate');
       const parsed = parseResult(data.result || '', step.isBranching);
-      const key = step.outputName || step.id;
-      setOutputs((prev) => ({
-        ...prev,
-        [key]: parsed,
-        ...(key !== step.id ? { [step.id]: parsed } : {}),
-      }));
+      if (step.isBranching && Array.isArray(parsed)) {
+        setBranches((prev) => {
+          const idx = prev.findIndex((b) => b.id === branch.id);
+          if (idx === -1) return prev;
+          const before = prev.slice(0, idx);
+          const after = prev.slice(idx + 1);
+          const newBranches: Branch[] = parsed.map((out, i) => ({
+            id: `${branch.id}-${i}`,
+            stepIndex: branch.stepIndex + 1,
+            context: { ...branch.context, [step.outputName || step.id]: out },
+            inputs: {},
+            lastOutput: out,
+          }));
+          return [...before, ...newBranches, ...after];
+        });
+      } else {
+        setBranches((prev) =>
+          prev.map((b) =>
+            b.id === branch.id
+              ? {
+                  ...b,
+                  stepIndex: b.stepIndex + 1,
+                  context: { ...b.context, [step.outputName || step.id]: parsed },
+                  lastOutput: parsed,
+                }
+              : b
+          )
+        );
+      }
     } catch (err: any) {
       setError(err.message || 'Request failed');
     }
-    setLoading(false);
+    setLoadingBranch(null);
   };
 
-  const handleSubmit = async (e: FormEvent, step: Step) => {
+  const handleSubmit = async (e: FormEvent, branch: Branch, step: Step) => {
     e.preventDefault();
-    if (step.stepType === 'prompt') await runPromptStep(step);
+    if (step.stepType === 'form') handleFormSubmit(branch, step);
+    if (step.stepType === 'prompt') await runPromptStep(branch, step);
   };
 
   return (
@@ -166,28 +218,82 @@ const ExperienceMaker = () => {
           ))}
         </select>
       </div>
-      {steps.map((step) => {
+      {branches.map((branch) => {
+        const step = steps[branch.stepIndex];
+        if (!step) {
+          return (
+            <div key={branch.id} className={styles['step-form']}>
+              {branch.lastOutput && (
+                Array.isArray(branch.lastOutput) ? (
+                  branch.lastOutput.map((v, i) => (
+                    <textarea
+                      key={i}
+                      className={styles['step-textarea']}
+                      readOnly
+                      value={v}
+                    />
+                  ))
+                ) : (
+                  <textarea
+                    className={styles['step-textarea']}
+                    readOnly
+                    value={branch.lastOutput as string}
+                  />
+                )
+              )}
+              <p>Flow complete</p>
+            </div>
+          );
+        }
         const inputs = extractInputs(step);
         return (
-          <form key={step.id} onSubmit={(e) => handleSubmit(e, step)} className={styles['step-form']}>
+          <form
+            key={branch.id}
+            onSubmit={(e) => handleSubmit(e, branch, step)}
+            className={styles['step-form']}
+          >
+            {branch.lastOutput && (
+              Array.isArray(branch.lastOutput) ? (
+                branch.lastOutput.map((v, i) => (
+                  <textarea
+                    key={i}
+                    className={styles['step-textarea']}
+                    readOnly
+                    value={v}
+                  />
+                ))
+              ) : (
+                <textarea
+                  className={styles['step-textarea']}
+                  readOnly
+                  value={branch.lastOutput as string}
+                />
+              )
+            )}
             <h3 className={styles['step-heading']}>{step.name}</h3>
             {step.stepType === 'form' && (
               <>
                 <p className="mb-2">{step.text}</p>
                 {inputs.map((inp) => (
                   <div key={inp.name}>
-                    <label className={`${styles['step-label']} capitalize`}>{inp.label || inp.name}</label>
+                    <label className={`${styles['step-label']} capitalize`}>
+                      {inp.label || inp.name}
+                    </label>
                     {inp.type === 'textarea' ? (
                       <textarea
                         className={styles['step-textarea']}
-                        value={values[`${step.id}:${inp.name}`] || ''}
-                        onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
+                        value={branch.inputs[inp.name] || ''}
+                        onChange={(e) =>
+                          handleInputChange(branch.id, inp.name, e.target.value)
+                        }
                       />
                     ) : inp.type === 'component' ? (
                       <select
                         className={styles['step-select']}
-                        value={values[`${step.id}:${inp.name}`] || ''}
-                        onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
+                        value={branch.inputs[inp.name] || ''}
+                        onChange={(e) =>
+                          handleInputChange(branch.id, inp.name, e.target.value)
+                        }
                       >
                         <option value="">Select...</option>
                         {(components[inp.componentType || ''] || []).map((c) => (
@@ -200,8 +306,10 @@ const ExperienceMaker = () => {
                       <input
                         type={inp.type || 'text'}
                         className={styles['step-input']}
-                        value={values[`${step.id}:${inp.name}`] || ''}
-                        onChange={(e) => handleChange(step.id, inp.name, e.target.value)}
+                        value={branch.inputs[inp.name] || ''}
+                        onChange={(e) =>
+                          handleInputChange(branch.id, inp.name, e.target.value)
+                        }
                       />
                     )}
                   </div>
@@ -213,27 +321,13 @@ const ExperienceMaker = () => {
             )}
             {step.stepType === 'prompt' && (
               <>
-                <button type="submit" className={styles['step-button']} disabled={loading}>
-                  {loading ? 'Running...' : 'Run'}
+                <button
+                  type="submit"
+                  className={styles['step-button']}
+                  disabled={loadingBranch === branch.id}
+                >
+                  {loadingBranch === branch.id ? 'Running...' : step.buttonLabel || 'Generate'}
                 </button>
-                {(outputs[step.outputName || step.id]) && (
-                  Array.isArray(outputs[step.outputName || step.id]) ? (
-                    (outputs[step.outputName || step.id] as string[]).map((v, i) => (
-                      <textarea
-                        key={i}
-                        className={styles['step-textarea']}
-                        readOnly
-                        value={v}
-                      />
-                    ))
-                  ) : (
-                    <textarea
-                      className={styles['step-textarea']}
-                      readOnly
-                      value={outputs[step.outputName || step.id] as string}
-                    />
-                  )
-                )}
               </>
             )}
           </form>
