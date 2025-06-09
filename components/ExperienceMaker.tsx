@@ -1,14 +1,16 @@
 import { useState, useEffect, FormEvent } from 'react';
 import {
   getSteps,
+  getMakerTypes,
   getComponentInstances,
 } from '../lib/firebaseHelpers';
 import type {
   Step,
   InputField,
   ComponentInstance,
+  MakerType,
 } from '../lib/types';
-import { mockSteps, mockComponents } from '../data/mockFlow';
+import { mockSteps, mockComponents, mockMakerTypes } from '../data/mockFlow';
 import buildPrompt from '../utils/buildPrompt';
 import styles from './ExperienceMaker.module.css';
 
@@ -16,6 +18,11 @@ const extractInputs = (step: Step): InputField[] =>
   Array.isArray(step.expectedInputs) ? step.expectedInputs : [];
 
 const ExperienceMaker = () => {
+  const [makerTypes, setMakerTypes] = useState<MakerType[]>(mockMakerTypes);
+  const [makerTypeId, setMakerTypeId] = useState<string>(
+    mockMakerTypes[0]?.id || ''
+  );
+  const [allSteps, setAllSteps] = useState<Step[]>(mockSteps);
   const [steps, setSteps] = useState<Step[]>(mockSteps);
   const [values, setValues] = useState<Record<string, string>>({});
   const [components, setComponents] = useState<Record<string, ComponentInstance[]>>(mockComponents);
@@ -27,30 +34,49 @@ const ExperienceMaker = () => {
     const load = async () => {
       if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) return;
       try {
-        const s = await getSteps();
-        setSteps(s);
-        const compTypes = new Set<string>();
-        s.forEach((step) => {
-          extractInputs(step).forEach((inp) => {
-            if (inp.type === 'component' && inp.componentType) {
-              compTypes.add(inp.componentType);
-            }
-          });
-        });
-        const entries = await Promise.all(
-          Array.from(compTypes).map(async (t) => [t, await getComponentInstances(t)])
-        );
-        const map: Record<string, ComponentInstance[]> = {};
-        entries.forEach(([t, inst]) => {
-          map[t as string] = inst as ComponentInstance[];
-        });
-        setComponents(map);
+        const [s, mts] = await Promise.all([getSteps(), getMakerTypes()]);
+        if (s.length) {
+          setAllSteps(s);
+        }
+        if (mts.length) {
+          setMakerTypes(mts);
+          setMakerTypeId(mts[0].id);
+        }
       } catch (err) {
-        console.error('Failed to load maker steps', err);
+        console.error('Failed to load maker data', err);
       }
     };
     load();
   }, []);
+
+  useEffect(() => {
+    const mt = makerTypes.find((m) => m.id === makerTypeId);
+    if (!mt) return;
+    const selected = mt.steps
+      .map((id) => allSteps.find((s) => s.id === id))
+      .filter((Boolean)) as Step[];
+    setSteps(selected);
+
+    const compTypes = new Set<string>();
+    selected.forEach((step) => {
+      extractInputs(step).forEach((inp) => {
+        if (inp.type === 'component' && inp.componentType) {
+          compTypes.add(inp.componentType);
+        }
+      });
+    });
+    (async () => {
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) return;
+      const entries = await Promise.all(
+        Array.from(compTypes).map(async (t) => [t, await getComponentInstances(t)])
+      );
+      const map: Record<string, ComponentInstance[]> = {};
+      entries.forEach(([t, inst]) => {
+        map[t as string] = inst as ComponentInstance[];
+      });
+      setComponents(map);
+    })();
+  }, [makerTypeId, makerTypes, allSteps]);
 
   const handleChange = (stepId: string, name: string, val: string) => {
     setValues((prev) => ({ ...prev, [`${stepId}:${name}`]: val }));
@@ -102,6 +128,20 @@ const ExperienceMaker = () => {
 
   return (
     <div className="space-y-6">
+      <div>
+        <label className={`${styles['step-label']} capitalize`}>Maker Type</label>
+        <select
+          className={styles['step-select']}
+          value={makerTypeId}
+          onChange={(e) => setMakerTypeId(e.target.value)}
+        >
+          {makerTypes.map((mt) => (
+            <option key={mt.id} value={mt.id}>
+              {mt.name}
+            </option>
+          ))}
+        </select>
+      </div>
       {steps.map((step) => {
         const inputs = extractInputs(step);
         return (
