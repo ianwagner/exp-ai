@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import AdminMakerTypesView from './AdminMakerTypesView';
+import AdminStepsView from './AdminStepsView';
 import AdminComponentsView from './AdminComponentsView';
 import AdminInstancesView from './AdminInstancesView';
 
 const SETTINGS_PASSWORD = process.env.NEXT_PUBLIC_SETTINGS_PASSWORD;
 
-type Tab = 'makers' | 'components' | 'instances';
+type Tab = 'makerTypes' | 'steps' | 'components' | 'instances';
 
 const AdminPanel = () => {
-  const [tab, setTab] = useState<Tab>('makers');
+  const [tab, setTab] = useState<Tab>('makerTypes');
   const [editMode, setEditMode] = useState(false);
 
   const requestEdit = () => {
@@ -31,10 +32,16 @@ const AdminPanel = () => {
         <div>
           <div className="flex space-x-2 mb-4">
             <button
-              className={`btn ${tab === 'makers' ? 'btn-primary' : 'btn-neutral'}`}
-              onClick={() => setTab('makers')}
+              className={`btn ${tab === 'makerTypes' ? 'btn-primary' : 'btn-neutral'}`}
+              onClick={() => setTab('makerTypes')}
             >
               Maker Types
+            </button>
+            <button
+              className={`btn ${tab === 'steps' ? 'btn-primary' : 'btn-neutral'}`}
+              onClick={() => setTab('steps')}
+            >
+              Steps
             </button>
             <button
               className={`btn ${tab === 'components' ? 'btn-primary' : 'btn-neutral'}`}
@@ -49,7 +56,8 @@ const AdminPanel = () => {
               Instances
             </button>
           </div>
-          {tab === 'makers' && <AdminMakerTypesView />}
+          {tab === 'makerTypes' && <AdminMakerTypesView />}
+          {tab === 'steps' && <AdminStepsView />}
           {tab === 'components' && <AdminComponentsView />}
           {tab === 'instances' && <AdminInstancesView />}
         </div>
@@ -59,4 +67,9 @@ const AdminPanel = () => {
 };
 
 export default AdminPanel;
-export { AdminMakerTypesView, AdminComponentsView, AdminInstancesView };
+export {
+  AdminMakerTypesView,
+  AdminStepsView,
+  AdminComponentsView,
+  AdminInstancesView,
+};

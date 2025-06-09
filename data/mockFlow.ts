@@ -1,4 +1,4 @@
-import type { ComponentType, ComponentInstance, Step } from '../lib/types';
+import type { ComponentType, ComponentInstance, Step, MakerType } from '../lib/types';
 
 // --- COMPONENT TYPE ---
 export const componentType: ComponentType = {
@@ -81,3 +81,11 @@ export const mockSteps = [stepIntro, stepDescription, stepGamesBuild];
 export const mockComponents: Record<string, ComponentInstance[]> = {
   experience: [componentInstance],
 };
+
+export const mockMakerTypes: MakerType[] = [
+  {
+    id: 'default',
+    name: 'Default Flow',
+    steps: mockSteps.map((s) => s.id),
+  },
+];

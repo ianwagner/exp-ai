@@ -26,3 +26,9 @@ export interface ComponentInstance {
   componentType: string;
   values: Record<string, any>;
 }
+
+export interface MakerType {
+  id: string;
+  name: string;
+  steps: string[];
+}

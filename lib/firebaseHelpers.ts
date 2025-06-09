@@ -7,7 +7,13 @@ import {
 } from 'firebase/firestore';
 import db, { storage } from './firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import type { Step, ComponentInstance, ComponentType, InputField } from './types';
+import type {
+  Step,
+  ComponentInstance,
+  ComponentType,
+  InputField,
+  MakerType,
+} from './types';
 
 export async function uploadFile(file: File, path: string): Promise<string> {
   const storageRef = ref(storage, path);
@@ -18,6 +24,14 @@ export async function uploadFile(file: File, path: string): Promise<string> {
 export async function getSteps(): Promise<Step[]> {
   const snapshot = await getDocs(collection(db, 'steps'));
   return snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() as Omit<Step, 'id'>) }));
+}
+
+export async function getMakerTypes(): Promise<MakerType[]> {
+  const snapshot = await getDocs(collection(db, 'makerTypes'));
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...(doc.data() as Omit<MakerType, 'id'>),
+  }));
 }
 
 export async function getComponentInstances(componentType: string): Promise<ComponentInstance[]> {
@@ -52,4 +66,9 @@ export async function setComponentInstance(
 ): Promise<void> {
   const { id, ...data } = instance;
   await setDoc(doc(db, `components/${typeId}/instances`, id), data);
+}
+
+export async function setMakerType(mt: MakerType): Promise<void> {
+  const { id, ...data } = mt;
+  await setDoc(doc(db, 'makerTypes', id), data);
 }
