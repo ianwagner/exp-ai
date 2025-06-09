@@ -192,12 +192,6 @@ const AdminStepsView = () => {
                 )}
                 <input
                   className="form-input-light"
-                  placeholder="Next Step ID"
-                  value={step.next || ''}
-                  onChange={(e) => handleChange(idx, 'next', e.target.value)}
-                />
-                <input
-                  className="form-input-light"
                   placeholder="Output Name"
                   value={step.outputName || ''}
                   onChange={(e) => handleChange(idx, 'outputName', e.target.value)}
