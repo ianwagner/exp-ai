@@ -26,7 +26,7 @@ const ExperienceMaker = () => {
   const [steps, setSteps] = useState<Step[]>(mockSteps);
   const [values, setValues] = useState<Record<string, string>>({});
   const [components, setComponents] = useState<Record<string, ComponentInstance[]>>(mockComponents);
-  const [outputs, setOutputs] = useState<Record<string, string>>({});
+  const [outputs, setOutputs] = useState<Record<string, string | string[]>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -101,6 +101,24 @@ const ExperienceMaker = () => {
     return buildPrompt(template, context);
   };
 
+  const parseResult = (
+    text: string,
+    branching?: boolean
+  ): string | string[] => {
+    if (branching) {
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) return parsed.map((v) => String(v));
+      } catch {}
+      const lines = text
+        .split(/\n+/)
+        .map((l) => l.trim().replace(/^\d+\.\s*/, '').replace(/^[-*]\s*/, ''))
+        .filter(Boolean);
+      return lines.length > 1 ? lines : [text];
+    }
+    return text;
+  };
+
   const runPromptStep = async (step: Step) => {
     const prompt = buildPromptForStep(step);
     if (!prompt) return;
@@ -114,7 +132,13 @@ const ExperienceMaker = () => {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error || 'Failed to generate');
-      setOutputs((prev) => ({ ...prev, [step.id]: data.result || '' }));
+      const parsed = parseResult(data.result || '', step.isBranching);
+      const key = step.outputName || step.id;
+      setOutputs((prev) => ({
+        ...prev,
+        [key]: parsed,
+        ...(key !== step.id ? { [step.id]: parsed } : {}),
+      }));
     } catch (err: any) {
       setError(err.message || 'Request failed');
     }
@@ -192,8 +216,23 @@ const ExperienceMaker = () => {
                 <button type="submit" className={styles['step-button']} disabled={loading}>
                   {loading ? 'Running...' : 'Run'}
                 </button>
-                {outputs[step.id] && (
-                  <textarea className={styles['step-textarea']} readOnly value={outputs[step.id]} />
+                {(outputs[step.outputName || step.id]) && (
+                  Array.isArray(outputs[step.outputName || step.id]) ? (
+                    (outputs[step.outputName || step.id] as string[]).map((v, i) => (
+                      <textarea
+                        key={i}
+                        className={styles['step-textarea']}
+                        readOnly
+                        value={v}
+                      />
+                    ))
+                  ) : (
+                    <textarea
+                      className={styles['step-textarea']}
+                      readOnly
+                      value={outputs[step.outputName || step.id] as string}
+                    />
+                  )
                 )}
               </>
             )}

@@ -54,6 +54,8 @@ Use cases: {{experienceType.useCases}}
 Mechanics: {{experienceType.mechanics}}
 
 Prefix each result with the icon {{experienceType.icon}} and include the name {{experienceType.name}}. Output each experience as a 1–2 sentence description in a numbered list.`,
+  outputName: 'description',
+  isBranching: true,
   next: 'gamesBuild',
 };
 
@@ -74,6 +76,7 @@ Output format:
 - Setup instructions
 - 5 sample trivia questions with answers
 - Scoring logic`,
+  outputName: 'gamesBuild',
   next: null,
 };
 
