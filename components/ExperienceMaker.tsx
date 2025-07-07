@@ -12,7 +12,6 @@ import type {
 } from '../lib/types';
 import { mockSteps, mockComponents, mockMakerTypes } from '../data/mockFlow';
 import buildPrompt from '../utils/buildPrompt';
-import styles from './ExperienceMaker.module.css';
 
 const extractInputs = (step: Step): InputField[] =>
   Array.isArray(step.expectedInputs) ? step.expectedInputs : [];
@@ -205,9 +204,9 @@ const ExperienceMaker = () => {
   return (
     <div className="space-y-6">
       <div>
-        <label className={`${styles['step-label']} capitalize`}>Maker Type</label>
+        <label className="step-label capitalize">Maker Type</label>
         <select
-          className={styles['step-select']}
+          className="select-field-dark"
           value={makerTypeId}
           onChange={(e) => setMakerTypeId(e.target.value)}
         >
@@ -222,20 +221,20 @@ const ExperienceMaker = () => {
         const step = steps[branch.stepIndex];
         if (!step) {
           return (
-            <div key={branch.id} className={styles['step-form']}>
+            <div key={branch.id} className="step-form">
               {branch.lastOutput && (
                 Array.isArray(branch.lastOutput) ? (
                   branch.lastOutput.map((v, i) => (
                     <textarea
                       key={i}
-                      className={styles['step-textarea']}
+                      className="textarea-field-dark"
                       readOnly
                       value={v}
                     />
                   ))
                 ) : (
                   <textarea
-                    className={styles['step-textarea']}
+                    className="textarea-field-dark"
                     readOnly
                     value={branch.lastOutput as string}
                   />
@@ -250,38 +249,38 @@ const ExperienceMaker = () => {
           <form
             key={branch.id}
             onSubmit={(e) => handleSubmit(e, branch, step)}
-            className={styles['step-form']}
+            className="step-form"
           >
             {branch.lastOutput && (
               Array.isArray(branch.lastOutput) ? (
                 branch.lastOutput.map((v, i) => (
                   <textarea
                     key={i}
-                    className={styles['step-textarea']}
+                    className="textarea-field-dark"
                     readOnly
                     value={v}
                   />
                 ))
               ) : (
                 <textarea
-                  className={styles['step-textarea']}
+                  className="textarea-field-dark"
                   readOnly
                   value={branch.lastOutput as string}
                 />
               )
             )}
-            <h3 className={styles['step-heading']}>{step.name}</h3>
+            <h3 className="step-heading">{step.name}</h3>
             {step.stepType === 'form' && (
               <>
                 <p className="mb-2">{step.text}</p>
                 {inputs.map((inp) => (
                   <div key={inp.name}>
-                    <label className={`${styles['step-label']} capitalize`}>
+                    <label className="step-label capitalize">
                       {inp.label || inp.name}
                     </label>
                     {inp.type === 'textarea' ? (
                       <textarea
-                        className={styles['step-textarea']}
+                        className="textarea-field-dark"
                         value={branch.inputs[inp.name] || ''}
                         onChange={(e) =>
                           handleInputChange(branch.id, inp.name, e.target.value)
@@ -289,7 +288,7 @@ const ExperienceMaker = () => {
                       />
                     ) : inp.type === 'component' ? (
                       <select
-                        className={styles['step-select']}
+                        className="select-field-dark"
                         value={branch.inputs[inp.name] || ''}
                         onChange={(e) =>
                           handleInputChange(branch.id, inp.name, e.target.value)
@@ -305,7 +304,7 @@ const ExperienceMaker = () => {
                     ) : (
                       <input
                         type={inp.type || 'text'}
-                        className={styles['step-input']}
+                        className="input-field-dark"
                         value={branch.inputs[inp.name] || ''}
                         onChange={(e) =>
                           handleInputChange(branch.id, inp.name, e.target.value)
@@ -314,7 +313,7 @@ const ExperienceMaker = () => {
                     )}
                   </div>
                 ))}
-                <button type="submit" className={styles['step-button']}>
+                <button type="submit" className="btn-border-yellow">
                   Next
                 </button>
               </>
@@ -323,7 +322,7 @@ const ExperienceMaker = () => {
               <>
                 <button
                   type="submit"
-                  className={styles['step-button']}
+                  className="btn-border-yellow"
                   disabled={loadingBranch === branch.id}
                 >
                   {loadingBranch === branch.id ? 'Running...' : step.buttonLabel || 'Generate'}
