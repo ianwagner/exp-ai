@@ -6,6 +6,12 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        background: '#191919',
+        surface: '#212121',
+        dark: '#393939',
+        accent: '#feb710',
+      },
       fontFamily: {
         sans: ['Space Grotesk', 'sans-serif'],
       },
