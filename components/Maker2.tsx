@@ -17,6 +17,7 @@ export default function Maker2() {
   const [count, setCount] = useState('1');
   const [reason, setReason] = useState('');
   const [cards, setCards] = useState<Card[]>([]);
+  const [error, setError] = useState('');
   const [modalText, setModalText] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,36 +43,44 @@ export default function Maker2() {
     const exp = experiences.find((e) => e.id === expId);
     if (!exp) return;
     setCards([]);
+    setError('');
     const template = `Generate ${count} descriptions for the experience "${exp.title}" based on this reason: ${reason}.\n\nBase description: ${exp.description}\nUse cases: ${exp.useCases}\nMechanics: ${exp.mechanics}\nProvide the results as a numbered list.`;
     const prompt = buildPrompt(template, {});
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
-    });
-    const data = await res.json().catch(() => null);
-    if (!res.ok) return;
-    const list = parseList(data.result || '');
-    setCards(list.map((t, i) => ({ id: i.toString(), text: t })));
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || 'Failed to generate');
+      const list = parseList(data.result || '');
+      setCards(list.map((t, i) => ({ id: i.toString(), text: t })));
+    } catch (err: any) {
+      setError(err.message || 'Request failed');
+    }
   };
 
   const makeGame = async (card: Card) => {
     const exp = experiences.find((e) => e.id === expId);
     if (!exp) return;
     setCards((prev) => prev.map((c) => (c === card ? { ...c, loading: true } : c)));
+    setError('');
     const template = `Create a detailed game plan using the following information.\nDescription: ${exp.description}\nUse Cases: ${exp.useCases}\nMechanics: ${exp.mechanics}\nThe plan should follow this instruction: ${exp.output}\nGame concept: ${card.text}`;
     const prompt = buildPrompt(template, {});
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
-    });
-    const data = await res.json().catch(() => null);
-    if (res.ok) {
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || 'Failed to generate');
       setCards((prev) =>
         prev.map((c) => (c === card ? { ...c, loading: false, plan: data.result } : c))
       );
-    } else {
+    } catch (err: any) {
+      setError(err.message || 'Request failed');
       setCards((prev) => prev.map((c) => (c === card ? { ...c, loading: false } : c)));
     }
   };
@@ -141,6 +150,7 @@ export default function Maker2() {
           </div>
         </div>
       )}
+      {error && <div className="text-[#ff4d4f]">{error}</div>}
     </div>
   );
 }
