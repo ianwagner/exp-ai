@@ -41,3 +41,12 @@ export interface MakerType {
   name: string;
   steps: string[];
 }
+
+export interface Experience {
+  id: string;
+  title: string;
+  description: string;
+  useCases: string;
+  mechanics: string;
+  output: string;
+}
