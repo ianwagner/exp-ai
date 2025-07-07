@@ -103,11 +103,41 @@ const AdminStepsView = () => {
     });
   };
 
-  const removeUse = (stepIdx: number, useIdx: number) => {
+const removeUse = (stepIdx: number, useIdx: number) => {
     setSteps((prev) => {
       const copy = [...prev];
       const uses = copy[stepIdx].uses || [];
       copy[stepIdx].uses = uses.filter((_, i) => i !== useIdx);
+      return copy;
+    });
+  };
+
+  const getAvailableTags = (stepIdx: number): string[] => {
+    const tags = new Set<string>();
+    const step = steps[stepIdx];
+    (step.expectedInputs || []).forEach((inp) => {
+      if (inp.name) tags.add(inp.name);
+      if (inp.type === 'component' && inp.componentType) {
+        const comp = componentTypes.find((ct) => ct.id === inp.componentType);
+        comp?.fields?.forEach((f) => tags.add(`${inp.name}.${f.name}`));
+      }
+    });
+    for (let i = 0; i < stepIdx; i++) {
+      const prev = steps[i];
+      const out = prev.outputName || prev.id;
+      if (out) tags.add(out);
+    }
+    return Array.from(tags);
+  };
+
+  const insertTag = (stepIdx: number, tag: string) => {
+    if (!tag) return;
+    setSteps((prev) => {
+      const copy = [...prev];
+      const cur = copy[stepIdx];
+      const tmpl = cur.template || '';
+      const sep = tmpl && !tmpl.endsWith(' ') ? ' ' : '';
+      cur.template = `${tmpl}${sep}{{${tag}}}`;
       return copy;
     });
   };
@@ -183,12 +213,27 @@ const AdminStepsView = () => {
                   />
                 )}
                 {step.stepType === 'prompt' && (
-                  <textarea
-                    className="form-input-light h-24"
-                    placeholder="Prompt Template"
-                    value={step.template || ''}
-                    onChange={(e) => handleChange(idx, 'template', e.target.value)}
-                  />
+                  <>
+                    <textarea
+                      className="form-input-light h-24"
+                      placeholder="Prompt Template"
+                      value={step.template || ''}
+                      onChange={(e) => handleChange(idx, 'template', e.target.value)}
+                    />
+                    <select
+                      className="form-input-light"
+                      defaultValue=""
+                      onChange={(e) => {
+                        insertTag(idx, e.target.value);
+                        e.target.value = '';
+                      }}
+                    >
+                      <option value="">Insert tag...</option>
+                      {getAvailableTags(idx).map((t) => (
+                        <option key={t} value={t}>{`{{${t}}}`}</option>
+                      ))}
+                    </select>
+                  </>
                 )}
                 <input
                   className="form-input-light"
