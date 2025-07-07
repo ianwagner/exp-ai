@@ -132,7 +132,9 @@ const ExperienceMaker = () => {
       const val = branch.inputs[inp.name] || '';
       if (inp.type === 'component' && inp.componentType) {
         const inst = components[inp.componentType]?.find((c) => c.id === val);
-        updates[inp.name] = inst ? inst.values : {};
+        updates[inp.name] = inst
+          ? { id: inst.id, componentType: inst.componentType, ...inst.values }
+          : {};
       } else {
         updates[inp.name] = val;
       }
