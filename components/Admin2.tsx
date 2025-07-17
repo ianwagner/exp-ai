@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import type { Experience } from '../lib/types';
-
-const STORAGE_KEY = 'maker2-experiences';
+import {
+  getExperiences,
+  setExperience,
+  deleteExperience,
+} from '../lib/firebaseHelpers';
 
 const blankExp = (): Omit<Experience, 'id'> => ({
   title: '',
@@ -16,31 +19,37 @@ export default function Admin2() {
   const [form, setForm] = useState<Omit<Experience, 'id'>>(blankExp());
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+    const load = async () => {
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) return;
       try {
-        setExperiences(JSON.parse(saved));
-      } catch {}
-    }
+        const list = await getExperiences();
+        if (list.length) setExperiences(list);
+      } catch (err) {
+        console.error('Failed to load experiences', err);
+      }
+    };
+    load();
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(experiences));
-  }, [experiences]);
 
   const handleChange = (field: keyof Omit<Experience, 'id'>, value: string) => {
     setForm((f) => ({ ...f, [field]: value }));
   };
 
-  const addExperience = () => {
+  const addExperience = async () => {
     if (!form.title) return;
     const newExp: Experience = { id: Date.now().toString(), ...form };
     setExperiences((prev) => [...prev, newExp]);
     setForm(blankExp());
+    if (process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+      await setExperience(newExp);
+    }
   };
 
-  const removeExp = (id: string) => {
+  const removeExp = async (id: string) => {
     setExperiences((prev) => prev.filter((e) => e.id !== id));
+    if (process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+      await deleteExperience(id);
+    }
   };
 
   return (
