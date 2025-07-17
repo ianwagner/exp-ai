@@ -19,6 +19,7 @@ export default function Maker2() {
   const [cards, setCards] = useState<Card[]>([]);
   const [error, setError] = useState('');
   const [modalText, setModalText] = useState<string | null>(null);
+  const [step, setStep] = useState<'form' | 'results'>('form');
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -56,6 +57,7 @@ export default function Maker2() {
       if (!res.ok) throw new Error(data?.error || 'Failed to generate');
       const list = parseList(data.result || '');
       setCards(list.map((t, i) => ({ id: i.toString(), text: t })));
+      setStep('results');
     } catch (err: any) {
       setError(err.message || 'Request failed');
     }
@@ -91,54 +93,62 @@ export default function Maker2() {
         <p>No experiences configured.</p>
       ) : (
         <>
-          <div className="space-y-2">
-            <select
-              className="form-input-light"
-              value={expId}
-              onChange={(e) => setExpId(e.target.value)}
-            >
-              {experiences.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.title}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              className="form-input-light"
-              value={count}
-              onChange={(e) => setCount(e.target.value)}
-              placeholder="Number"
-            />
-            <textarea
-              className="form-input-light"
-              placeholder="Reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            />
-            <button onClick={generate} className="btn btn-blue">
-              make
-            </button>
-          </div>
-          {cards.length > 0 && (
-            <div className="grid md:grid-cols-2 gap-4 mt-4">
-              {cards.map((c) => (
-                <div key={c.id} className="border p-4 rounded relative">
-                  {c.loading && (
-                    <div className="absolute top-2 right-2 h-5 w-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                  )}
-                  <h3 className="font-bold mb-2">{experiences.find((e) => e.id === expId)?.title}</h3>
-                  <p className="mb-4">{c.text}</p>
-                  <button
-                    className="btn btn-primary"
-                    disabled={c.loading}
-                    onClick={() => (c.plan ? setModalText(c.plan) : makeGame(c))}
-                  >
-                    {c.plan ? 'see game plan' : 'make game'}
-                  </button>
-                </div>
-              ))}
+          {step === 'form' ? (
+            <div className="space-y-2">
+              <select
+                className="form-input-light"
+                value={expId}
+                onChange={(e) => setExpId(e.target.value)}
+              >
+                {experiences.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.title}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="number"
+                className="form-input-light"
+                value={count}
+                onChange={(e) => setCount(e.target.value)}
+                placeholder="Number"
+              />
+              <textarea
+                className="form-input-light"
+                placeholder="Reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+              <button onClick={generate} className="btn btn-blue">
+                make
+              </button>
             </div>
+          ) : (
+            <>
+              <button onClick={() => { setStep('form'); }} className="btn btn-neutral">
+                Back
+              </button>
+              {cards.length > 0 && (
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                  {cards.map((c) => (
+                    <div key={c.id} className="border p-4 rounded relative">
+                      {c.loading && (
+                        <div className="absolute top-2 right-2 h-5 w-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                      )}
+                      <h3 className="font-bold mb-2">{experiences.find((e) => e.id === expId)?.title}</h3>
+                      <p className="mb-4">{c.text}</p>
+                      <button
+                        className="btn btn-primary"
+                        disabled={c.loading}
+                        onClick={() => (c.plan ? setModalText(c.plan) : makeGame(c))}
+                      >
+                        {c.plan ? 'see game plan' : 'make game'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </>
       )}
