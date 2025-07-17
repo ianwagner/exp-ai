@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Experience } from '../lib/types';
 import buildPrompt from '../utils/buildPrompt';
-
-const STORAGE_KEY = 'maker2-experiences';
+import { getExperiences } from '../lib/firebaseHelpers';
 
 interface Card {
   id: string;
@@ -22,14 +21,19 @@ export default function Maker2() {
   const [step, setStep] = useState<'form' | 'results'>('form');
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+    const load = async () => {
+      if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) return;
       try {
-        const list: Experience[] = JSON.parse(saved);
-        setExperiences(list);
-        if (list[0]) setExpId(list[0].id);
-      } catch {}
-    }
+        const list = await getExperiences();
+        if (list.length) {
+          setExperiences(list);
+          setExpId(list[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load experiences', err);
+      }
+    };
+    load();
   }, []);
 
   const parseList = (text: string): string[] => {

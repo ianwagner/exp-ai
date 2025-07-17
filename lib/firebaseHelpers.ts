@@ -3,6 +3,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
   doc,
 } from 'firebase/firestore';
 import db, { storage } from './firebase';
@@ -71,4 +72,25 @@ export async function setComponentInstance(
 export async function setMakerType(mt: MakerType): Promise<void> {
   const { id, ...data } = mt;
   await setDoc(doc(db, 'makerTypes', id), data);
+}
+
+// Experiences ---------------------------------------------------------------
+
+import type { Experience } from './types';
+
+export async function getExperiences(): Promise<Experience[]> {
+  const snapshot = await getDocs(collection(db, 'experiences'));
+  return snapshot.docs.map((d) => ({
+    id: d.id,
+    ...(d.data() as Omit<Experience, 'id'>),
+  }));
+}
+
+export async function setExperience(exp: Experience): Promise<void> {
+  const { id, ...data } = exp;
+  await setDoc(doc(db, 'experiences', id), data);
+}
+
+export async function deleteExperience(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'experiences', id));
 }
